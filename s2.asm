@@ -6051,8 +6051,8 @@ CollisionData: zoneOrderedTable 4,2
 	zoneTableEntry.l ColS_WFZSCZ
 	zoneTableEntry.l ColP_EHZHTZ ;07
 	zoneTableEntry.l ColS_EHZHTZ
-	zoneTableEntry.l ColP_EHZHTZ ;08
-	zoneTableEntry.l ColS_EHZHTZ
+	zoneTableEntry.l ColP_HPZ    ;08
+	zoneTableEntry.l ColS_HPZ
 	zoneTableEntry.l ColP_EHZHTZ ;09
 	zoneTableEntry.l ColS_EHZHTZ
 	zoneTableEntry.l ColP_OOZ    ;0A
@@ -91239,12 +91239,12 @@ ColP_MTZ:	BINCLUDE	"collision/MTZ primary 16x16 collision index.bin"
 	even
 ;---------------------------------------------------------------------------------------
 ; HPZ primary 16x16 collision index (Kosinski compression)
-ColP_HPZ:	;BINCLUDE	"collision/HPZ primary 16x16 collision index.bin"
-	;even
+ColP_HPZ:	BINCLUDE	"collision/HPZ primary 16x16 collision index.bin"
+	even
 ;---------------------------------------------------------------------------------------
 ; HPZ secondary 16x16 collision index (Kosinski compression)
-ColS_HPZ:	;BINCLUDE	"collision/HPZ secondary 16x16 collision index.bin"
-	;even
+ColS_HPZ:	BINCLUDE	"collision/HPZ secondary 16x16 collision index.bin"
+	even
 ;---------------------------------------------------------------------------------------
 ; OOZ primary 16x16 collision index (Kosinski compression)
 ColP_OOZ:	BINCLUDE	"collision/OOZ primary 16x16 collision index.bin"
@@ -91545,8 +91545,8 @@ Level_HTZ2:	BINCLUDE	"level/layout/HTZ_2.bin"
 	even
 ;---------------------------------------------------------------------------------------
 ; HPZ act 1 level layout (Kosinski compression)
-Level_HPZ1:	;BINCLUDE	"level/layout/HPZ_1.bin"
-	;even
+Level_HPZ1:	BINCLUDE	"level/layout/HPZ_1.bin"
+	even
 ;---------------------------------------------------------------------------------------
 ; OOZ act 1 level layout (Kosinski compression)
 Level_OOZ1:	BINCLUDE	"level/layout/OOZ_1.bin"
@@ -92795,13 +92795,13 @@ ArtKos_MTZ:	BINCLUDE	"art/kosinski/MTZ.bin"
 BM128_MTZ:	BINCLUDE	"mappings/128x128/MTZ.bin"
 ;-----------------------------------------------------------------------------------
 ; HPZ 16x16 block mappings (Kosinski compression)
-BM16_HPZ:	;BINCLUDE	"mappings/16x16/HPZ.bin"
+BM16_HPZ:	BINCLUDE	"mappings/16x16/HPZ.bin"
 ;-----------------------------------------------------------------------------------
 ; HPZ main level patterns (Kosinski compression)
-ArtKos_HPZ:	;BINCLUDE	"art/kosinski/HPZ.bin"
+ArtKos_HPZ:	BINCLUDE	"art/kosinski/HPZ.bin"
 ;-----------------------------------------------------------------------------------
 ; HPZ 128x128 block mappings (Kosinski compression)
-BM128_HPZ:	;BINCLUDE	"mappings/128x128/HPZ.bin"
+BM128_HPZ:	BINCLUDE	"mappings/128x128/HPZ.bin"
 ;-----------------------------------------------------------------------------------
 ; OOZ 16x16 block mappings (Kosinski compression)
 BM16_OOZ:	BINCLUDE	"mappings/16x16/OOZ.bin"
