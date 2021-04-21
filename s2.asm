@@ -10309,7 +10309,7 @@ SSStartNewAct:
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with both sonic and tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level. Last part is unused.
+; stage, corresponding to the four possible parts of the level.
 ; ----------------------------------------------------------------------------
 ; Misc_7756:
 SpecialStage_RingReq_Team:
@@ -10325,7 +10325,7 @@ SpecialStage_RingReq_Team:
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with either sonic or tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level. Last part is unused.
+; stage, corresponding to the four possible parts of the level.
 ; ----------------------------------------------------------------------------
 ; Misc_7772:
 SpecialStage_RingReq_Alone:
@@ -30362,7 +30362,7 @@ ObjPtr_SteamSpring:	dc.l Obj42	; Steam Spring from MTZ
 ObjPtr_SlidingSpike:	dc.l Obj43	; Sliding spike obstacle thing from OOZ
 ObjPtr_RoundBumper:	dc.l Obj44	; Round bumper from Casino Night Zone
 ObjPtr_OOZSpring:	dc.l Obj45	; Pressure spring from OOZ
-ObjPtr_OOZBall:		dc.l ObjNull	; Ball from OOZ (unused, beta leftover)
+		dc.l ObjNull
 ObjPtr_Button:		dc.l Obj47	; Button
 ObjPtr_LauncherBall:	dc.l Obj48	; Round ball thing from OOZ that fires you off in a different direction
 ObjPtr_EHZWaterfall:	dc.l Obj49	; Waterfall from EHZ
@@ -30481,7 +30481,7 @@ ObjPtr_Cloud:		dc.l ObjB3	; Clouds (placeable object) from SCZ
 ObjPtr_VPropeller:	dc.l ObjB4	; Vertical propeller from WFZ
 ObjPtr_HPropeller:	dc.l ObjB5	; Horizontal propeller from WFZ
 ObjPtr_TiltingPlatform:	dc.l ObjB6	; Tilting platform from WFZ
-ObjPtr_VerticalLaser:	dc.l ObjB7	; Unused huge vertical laser from WFZ
+	dc.l ObjNull
 ObjPtr_WallTurret:	dc.l ObjB8	; Wall turret from WFZ
 ObjPtr_Laser:		dc.l ObjB9	; Laser from WFZ that shoots down the Tornado
 ObjPtr_WFZWheel:	dc.l ObjBA	; Wheel from WFZ
@@ -54745,192 +54745,6 @@ JmpTo5_MarkObjGone3 ; JmpTo
 	align 4
     endif
 
-
-
-
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 73 - Solid rotating ring thing from Mystic Cave Zone
-; (unused, but can be seen in debug mode)
-; ----------------------------------------------------------------------------
-; Sprite_289D4:
-Obj73:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj73_Index(pc,d0.w),d1
-	jmp	Obj73_Index(pc,d1.w)
-; ===========================================================================
-; off_289E2:
-Obj73_Index:	offsetTable
-		offsetTableEntry.w Obj73_Init		; 0
-		offsetTableEntry.w Obj73_Main		; 2
-		offsetTableEntry.w Obj73_SubObject	; 4
-; ===========================================================================
-; loc_289E8:
-Obj73_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj73_MapUnc_28B9C,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Ring,1,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo37_Adjust2PArtPointer
-	move.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
-	move.b	#8,width_pixels(a0)
-	move.w	x_pos(a0),objoff_3A(a0)
-	move.w	y_pos(a0),objoff_38(a0)
-	move.b	#0,collision_flags(a0)
-	bset	#7,status(a0)
-	move.b	subtype(a0),d1
-	andi.b	#$F0,d1
-	ext.w	d1
-	asl.w	#3,d1
-	move.w	d1,objoff_3E(a0)
-	move.b	status(a0),d0
-	ror.b	#2,d0
-	andi.b	#$C0,d0
-	move.b	d0,angle(a0)
-	lea	objoff_29(a0),a2
-	move.b	subtype(a0),d1
-	andi.w	#7,d1
-	move.b	#0,(a2)+
-	move.w	d1,d3
-	lsl.w	#4,d3
-	move.b	d3,objoff_3C(a0)
-	subq.w	#1,d1
-	bcs.s	Obj73_LoadSubObject_End
-	btst	#3,subtype(a0)
-	beq.s	Obj73_LoadSubObject
-	subq.w	#1,d1
-	bcs.s	Obj73_LoadSubObject_End
-; loc_28A6E:
-Obj73_LoadSubObject:
-	jsrto	(SingleObjLoad).l, JmpTo9_SingleObjLoad
-	bne.s	Obj73_LoadSubObject_End
-	addq.b	#1,objoff_29(a0)
-	move.w	a1,d5
-	subi.w	#Object_RAM,d5
-    if object_size=$40
-	lsr.w	#6,d5
-    else
-	divu.w	#object_size,d5
-    endif
-	andi.w	#$7F,d5
-	move.b	d5,(a2)+
-	move.b	#4,routine(a1)
-	_move.b	id(a0),id(a1) ; load obj73
-	move.l	mappings(a0),mappings(a1)
-	move.w	art_tile(a0),art_tile(a1)
-	move.b	render_flags(a0),render_flags(a1)
-	move.b	priority(a0),priority(a1)
-	move.b	width_pixels(a0),width_pixels(a1)
-	move.b	collision_flags(a0),collision_flags(a1)
-	move.b	status(a0),status(a1)
-	subi.b	#$10,d3
-	move.b	d3,objoff_3C(a1)
-	dbf	d1,Obj73_LoadSubObject
-; loc_28AC8:
-Obj73_LoadSubObject_End:
-
-	move.w	a0,d5
-	subi.w	#Object_RAM,d5
-    if object_size=$40
-	lsr.w	#6,d5
-    else
-	divu.w	#object_size,d5
-    endif
-	andi.w	#$7F,d5
-	move.b	d5,(a2)+
-; loc_28AD6:
-Obj73_Main:
-	move.w	x_pos(a0),-(sp)
-	bsr.w	loc_28AF4
-	move.w	#8,d1
-	move.w	#8,d2
-	move.w	d2,d3
-	addq.w	#1,d3
-	move.w	(sp)+,d4
-	jsrto	(SolidObject).l, JmpTo17_SolidObject
-	bra.w	loc_28B46
-; ===========================================================================
-
-loc_28AF4:
-	move.w	objoff_3E(a0),d0
-	add.w	d0,angle(a0)
-	move.b	angle(a0),d0
-	jsr	(CalcSine).l
-	move.w	objoff_38(a0),d2
-	move.w	objoff_3A(a0),d3
-	lea	objoff_29(a0),a2
-	moveq	#0,d6
-	move.b	(a2)+,d6
-
-loc_28B16:
-	moveq	#0,d4
-	move.b	(a2)+,d4
-    if object_size=$40
-	lsl.w	#6,d4
-    else
-	mulu.w	#object_size,d4
-    endif
-	addi.l	#Object_RAM,d4
-	movea.l	d4,a1 ; a1=object
-	moveq	#0,d4
-	move.b	objoff_3C(a1),d4
-	move.l	d4,d5
-	muls.w	d0,d4
-	asr.l	#8,d4
-	muls.w	d1,d5
-	asr.l	#8,d5
-	add.w	d2,d4
-	add.w	d3,d5
-	move.w	d4,y_pos(a1)
-	move.w	d5,x_pos(a1)
-	dbf	d6,loc_28B16
-	rts
-; ===========================================================================
-
-loc_28B46:
-	move.w	objoff_3A(a0),d0
-	andi.w	#$FF80,d0
-	sub.w	(Camera_X_pos_coarse).w,d0
-	cmpi.w	#$280,d0
-	bhi.w	+
-	jmpto	(DisplaySprite).l, JmpTo21_DisplaySprite
-; ===========================================================================
-+
-	moveq	#0,d2
-	lea	objoff_29(a0),a2
-
-	move.b	(a2)+,d2
--	moveq	#0,d0
-	move.b	(a2)+,d0
-    if object_size=$40
-	lsl.w	#6,d0
-    else
-	mulu.w	#object_size,d0
-    endif
-	addi.l	#Object_RAM,d0
-	movea.l	d0,a1	; a1=object
-	jsrto	(DeleteObject2).l, JmpTo_DeleteObject2
-	dbf	d2,-
-	rts
-; ===========================================================================
-; loc_28B7E:
-Obj73_SubObject:
-	move.w	#8,d1
-	move.w	#8,d2
-	move.w	d2,d3
-	addq.w	#1,d3
-	move.w	objoff_36(a0),d4
-	jsrto	(SolidObject).l, JmpTo17_SolidObject
-	move.w	x_pos(a0),objoff_36(a0)
-	jmpto	(DisplaySprite).l, JmpTo21_DisplaySprite
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; sprite mappings
-; ----------------------------------------------------------------------------
-Obj73_MapUnc_28B9C:	BINCLUDE "mappings/sprite/obj73.bin"
-; ===========================================================================
-
     if ~~removeJmpTos
 JmpTo21_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -56975,10 +56789,10 @@ Obj83_Init:
 	move.w	x_pos(a0),Obj83_initial_x_pos(a0)
 	move.w	y_pos(a0),Obj83_initial_y_pos(a0)
 
-	; Setup subtype variables (rotation speed and other unused variable)
+	; Setup subtype variables (rotation speed and other variable)
 	move.b	subtype(a0),d1
 	move.b	d1,d0
-	andi.w	#$F,d1	; The lower 4 bits of subtype are unused, making these instructions useless
+	andi.w	#$F,d1	
 	andi.b	#$F0,d0
 	ext.w	d0
 	asl.w	#3,d0
@@ -59082,7 +58896,6 @@ SlotMachine_Routine4:
 	andi.b	#$F,d0						; Want only low nibble
 	addi.b	#$C,d0						; Increase by $C
 	move.b	d0,slot_timer(a4)			; New value for slot timer
-	clr.b	2(a4)						; Clear otherwise unused variable
 	_addq.b	#4,slot_rout(a4)			; => SlotMachine_Routine5
 	rts
 ; ===========================================================================
@@ -79759,7 +79572,6 @@ loc_3B674:
 	clr.b	anim_frame(a0)
 	clr.b	anim_frame_duration(a0)
 	bsr.w	loc_3B7BC
-	bsr.w	loc_3B7F8
 	moveq	#SndID_Fire,d0
 	jmpto	(PlaySound).l, JmpTo12_PlaySound
 ; ===========================================================================
@@ -79909,17 +79721,6 @@ loc_3B7DE:
 	bset	#1,status(a1)
 
 return_3B7F6:
-	rts
-; ===========================================================================
-
-loc_3B7F8:
-	jsrto	(SingleObjLoad2).l, JmpTo25_SingleObjLoad2
-	bne.s	+
-	_move.b	#ObjID_VerticalLaser,id(a1) ; load objB7 (huge unused vertical laser!)
-	move.b	#$72,subtype(a1) ; <== ObjB7_SubObjData
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-+
 	rts
 ; ===========================================================================
 ; off_3B818:
@@ -88989,7 +88790,6 @@ DbgObjList_WFZ: dbglistheader
 	dbglistobj ObjID_TiltingPlatform, ObjB6_MapUnc_3B856, $6C,   0, make_art_tile(ArtTile_ArtNem_WfzTiltPlatforms,1,1)
 	dbglistobj ObjID_TiltingPlatform, ObjB6_MapUnc_3B856, $6E,   0, make_art_tile(ArtTile_ArtNem_WfzTiltPlatforms,1,1)
 	dbglistobj ObjID_TiltingPlatform, ObjB6_MapUnc_3B856, $70,   0, make_art_tile(ArtTile_ArtNem_WfzTiltPlatforms,1,1)
-	dbglistobj ObjID_VerticalLaser,	ObjB7_MapUnc_3B8E4, $72,   0, make_art_tile(ArtTile_ArtNem_WfzVrtclLazer,2,1)
 	dbglistobj ObjID_WallTurret,	ObjB8_Obj98_MapUnc_3BA46, $74,   0, make_art_tile(ArtTile_ArtNem_WfzWallTurret,0,0)
 	dbglistobj ObjID_Laser,		ObjB9_MapUnc_3BB18, $76,   0, make_art_tile(ArtTile_ArtNem_WfzHrzntlLazer,2,1)
 	dbglistobj ObjID_WFZWheel,	ObjBA_MapUnc_3BB70, $78,   0, make_art_tile(ArtTile_ArtNem_WfzConveyorBeltWheel,2,1)
@@ -89087,7 +88887,6 @@ DbgObjList_MCZ: dbglistheader
 	dbglistobj ObjID_Starpost,	Obj79_MapUnc_1F424,   1,   0, make_art_tile(ArtTile_ArtNem_Checkpoint,0,0)
 	dbglistobj ObjID_SwingingPlatform, Obj15_Obj7A_MapUnc_10256, $48,   2, make_art_tile(ArtTile_ArtKos_LevelArt,0,0)
 	dbglistobj ObjID_CollapsPform,	Obj1F_MapUnc_11106,   0,   0, make_art_tile(ArtTile_ArtNem_MCZCollapsePlat,3,0)
-	dbglistobj ObjID_RotatingRings,	Obj73_MapUnc_28B9C, $F5,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0)
 	dbglistobj ObjID_MCZRotPforms,	Obj6A_MapUnc_27D30, $18,   0, make_art_tile(ArtTile_ArtNem_Crate,3,0)
 	dbglistobj ObjID_Stomper,	Obj2A_MapUnc_11666,   0,   0, make_art_tile(ArtTile_ArtKos_LevelArt,2,0)
 	dbglistobj ObjID_Spikes,	Obj36_MapUnc_15B68,   0,   0, make_art_tile(ArtTile_ArtNem_Spikes,1,0)
