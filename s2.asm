@@ -7244,6 +7244,7 @@ SSTrack_Draw:
 	move.b	(a2)+,d2										; Ignore the first 3 bytes
 	move.b	(a2)+,d2										; Why not 'addq.l	#3,a2'?
 	move.b	(a2)+,d2
+	move.b	(a2)+,d2										; Get byte
 	move.l	a0,(SSTrack_mappings_bitflags).w				; Save pointer to bit flags mappings
 	move.l	a0,(SSTrack_last_mappings).w					; ... twice
 	move.l	a1,(SSTrack_mappings_uncompressed).w			; Save pointer to uncompressed mappings
@@ -10308,33 +10309,33 @@ SSStartNewAct:
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with both sonic and tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level.
+; stage, corresponding to the four possible parts of the level. Last part is unused.
 ; ----------------------------------------------------------------------------
 ; Misc_7756:
 SpecialStage_RingReq_Team:
-	dc.b  40, 80,140	; 4
-	dc.b  50,100,140	; 8
-	dc.b  60,110,160	; 12
-	dc.b  40,100,150	; 16
-	dc.b  55,110,200	; 20
-	dc.b  80,140,220	; 24
-	dc.b 100,190,210	; 28
+	dc.b  40, 80,140,120	; 4
+	dc.b  50,100,140,150	; 8
+	dc.b  60,110,160,170	; 12
+	dc.b  40,100,150,160	; 16
+	dc.b  55,110,200,200	; 20
+	dc.b  80,140,220,220	; 24
+	dc.b 100,190,210,210	; 28
 ; ----------------------------------------------------------------------------
 ; Ring requirement values for Sonic or Tails alone games
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with either sonic or tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level.
+; stage, corresponding to the four possible parts of the level. Last part is unused.
 ; ----------------------------------------------------------------------------
 ; Misc_7772:
 SpecialStage_RingReq_Alone:
-	dc.b  30, 70,130    ; 4
-	dc.b  50,100,140    ; 8
-	dc.b  50,110,160	; 12
-	dc.b  40,110,150	; 16
-	dc.b  50, 90,160	; 20
-	dc.b  80,140,210	; 24
-	dc.b 100,150,190	; 28
+	dc.b  30, 70,130,110	; 4
+	dc.b  50,100,140,140	; 8
+	dc.b  50,110,160,160	; 12
+	dc.b  40,110,150,150	; 16
+	dc.b  50, 90,160,160	; 20
+	dc.b  80,140,210,210	; 24
+	dc.b 100,150,190,190	; 28
 
 ; special stage palette table
 ; word_778E:
@@ -18937,9 +18938,6 @@ ScrollHoriz:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; The upper 16 bits of Camera_Y_pos is the actual Y-pos, the lower ones seem
-; unused, yet this code goes to a strange extent to manage them.
-;sub_D77A:
 ScrollVerti:
 	moveq	#0,d1
 	move.w	y_pos(a0),d0
@@ -18956,7 +18954,7 @@ ScrollVerti:
 .notRolling:
 	btst	#1,status(a0)			; is the player in the air?
 	beq.s	.checkBoundaryCrossed_onGround	; if not, branch
-;.checkBoundaryCrossed_inAir:
+.checkBoundaryCrossed_inAir:
 	; If Sonic's in the air, he has $20 pixels above and below him to move without disturbing the camera.
 	; The camera movement is also only capped at $10 pixels.
 	addi.w	#$20,d0
@@ -19312,7 +19310,7 @@ Dynamic_Sonic1AsYouMove:
 	bsr.w	Draw_BG1
 	lea	(Scroll_flags_BG2_copy).w,a2	; referred to in CPZ deformation routine, but cleared right after
 	lea	(Camera_BG2_copy).w,a3
-	bsr.w	Draw_BG2	; Essentially unused, though
+	bsr.w	Draw_BG2
 	lea	(Scroll_flags_BG3_copy).w,a2
 	lea	(Camera_BG3_copy).w,a3
 	bsr.w	Draw_BG3	; used in CPZ deformation routine
@@ -20318,8 +20316,6 @@ CalcBlockVRAMPosB:
 	swap	d0
 	move.w	d4,d0
 	rts
-; ===========================================================================
-; interestingly, this subroutine was in the Sonic 1 ROM, unused
 +
 	add.w	4(a3),d4
 	add.w	(a3),d5
@@ -23470,7 +23466,7 @@ JmpTo_ObjCheckRightWallDist ; JmpTo
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
-; Object 17 - GHZ rotating log helix spikes (from Sonic 1, unused)
+; Object 17 - GHZ rotating log helix spikes (from Sonic 1)
 ; the programming of this was modified somewhat between Sonic 1 and Sonic 2
 ; ----------------------------------------------------------------------------
 ; Sprite_10310:
@@ -23602,7 +23598,7 @@ Obj17_Display:
 	bra.w	DisplaySprite
 ; ===========================================================================
 ; -----------------------------------------------------------------------------
-; sprite mappings - helix of spikes on a pole (GHZ) (unused)
+; sprite mappings - helix of spikes on a pole (GHZ)
 ; -----------------------------------------------------------------------------
 Obj17_MapUnc_10452:	BINCLUDE "mappings/sprite/obj17.bin"
 ; ===========================================================================
@@ -24334,20 +24330,14 @@ Obj1F_MCZ_DelayData:
 Obj1F_ARZ_DelayData:
 	dc.b $16,$1A,$18,$12,  6, $E, $A,  2
 	rev02even
-; S1 remnant: Height data for GHZ collapsing platform (unused):
+; S1 remnant: Height data for GHZ collapsing platform:
 ;byte_10C3C:
 Obj1A_GHZ_SlopeData:
 	dc.b $20,$20,$20,$20,$20,$20,$20,$20,$21,$21,$22,$22,$23,$23,$24,$24
 	dc.b $25,$25,$26,$26,$27,$27,$28,$28,$29,$29,$2A,$2A,$2B,$2B,$2C,$2C; 16
 	dc.b $2D,$2D,$2E,$2E,$2F,$2F,$30,$30,$30,$30,$30,$30,$30,$30,$30,$30; 32
 	even
-; -------------------------------------------------------------------------------
-; unused sprite mappings (GHZ)
-; -------------------------------------------------------------------------------
 Obj1A_MapUnc_10C6C:	BINCLUDE "mappings/sprite/obj1A_a.bin"
-; ----------------------------------------------------------------------------
-; unused sprite mappings (MZ, SLZ, SBZ)
-; ----------------------------------------------------------------------------
 Obj1F_MapUnc_10F0C:	BINCLUDE "mappings/sprite/obj1F_a.bin"
 
 ; Slope data for platforms.
@@ -30307,18 +30297,18 @@ ObjPtr_Splash:		dc.l Obj08	; Water splash in Aquatic Ruin Zone, Spindash dust
 ObjPtr_SonicSS:		dc.l Obj09	; Sonic in Special Stage
 ObjPtr_SmallBubbles:	dc.l Obj0A	; Small bubbles from Sonic's face while underwater
 ObjPtr_TippingFloor:	dc.l Obj0B	; Section of pipe that tips you off from CPZ
-			dc.l ObjNull	; Small floating platform (unused)
+			dc.l ObjNull	; Small floating platform
 ObjPtr_Signpost:	dc.l Obj0D	; End of level signpost
 ObjPtr_IntroStars:	dc.l Obj0E	; Flashing stars from intro
 ObjPtr_TitleMenu:	dc.l Obj0F	; Title screen menu
 ObjPtr_TailsSS:		dc.l Obj10	; Tails in Special Stage
 ObjPtr_Bridge:		dc.l Obj11	; Bridge in Emerald Hill Zone and Hidden Palace Zone
-ObjPtr_HPZEmerald:	dc.l Obj12	; Emerald from Hidden Palace Zone (unused)
-ObjPtr_HPZWaterfall:	dc.l Obj13	; Waterfall in Hidden Palace Zone (unused)
+ObjPtr_HPZEmerald:	dc.l Obj12	; Emerald from Hidden Palace Zone 
+ObjPtr_HPZWaterfall:	dc.l Obj13	; Waterfall in Hidden Palace Zone 
 ObjPtr_Seesaw:		dc.l Obj14	; Seesaw from Hill Top Zone
 ObjPtr_SwingingPlatform:dc.l Obj15	; Swinging platform from Aquatic Ruin Zone
 ObjPtr_HTZLift:		dc.l Obj16	; Diagonally moving lift from HTZ
-			dc.l Obj17	; GHZ rotating log helix spikes (from Sonic 1, unused)
+			dc.l Obj17	; GHZ rotating log helix spikes (from Sonic 1)
 ObjPtr_ARZPlatform:
 ObjPtr_EHZPlatform:	dc.l Obj18	; Stationary floating platform from ARZ and EHZ
 ObjPtr_CPZPlatform:
@@ -30372,7 +30362,7 @@ ObjPtr_SteamSpring:	dc.l Obj42	; Steam Spring from MTZ
 ObjPtr_SlidingSpike:	dc.l Obj43	; Sliding spike obstacle thing from OOZ
 ObjPtr_RoundBumper:	dc.l Obj44	; Round bumper from Casino Night Zone
 ObjPtr_OOZSpring:	dc.l Obj45	; Pressure spring from OOZ
-ObjPtr_OOZBall:		dc.l Obj46	; Ball from OOZ (unused, beta leftover)
+ObjPtr_OOZBall:		dc.l ObjNull	; Ball from OOZ (unused, beta leftover)
 ObjPtr_Button:		dc.l Obj47	; Button
 ObjPtr_LauncherBall:	dc.l Obj48	; Round ball thing from OOZ that fires you off in a different direction
 ObjPtr_EHZWaterfall:	dc.l Obj49	; Waterfall from EHZ
@@ -30422,7 +30412,7 @@ ObjPtr_MTZLavaBubble:
 ObjPtr_HPZBridgeStake:
 ObjPtr_PulsingOrb:	dc.l Obj71	; Bridge stake and pulsing orb from Hidden Palace Zone
 ObjPtr_CNZConveyorBelt:	dc.l Obj72	; Conveyor belt from CNZ
-ObjPtr_RotatingRings:	dc.l Obj73	; Solid rotating ring thing from Mystic Cave Zone (mostly unused)
+ObjPtr_RotatingRings:	dc.l ObjNull
 ObjPtr_InvisibleBlock:	dc.l Obj74	; Invisible solid block
 ObjPtr_MCZBrick:	dc.l Obj75	; Brick from MCZ
 ObjPtr_SlidingSpikes:	dc.l Obj76	; Spike block that slides out of the wall from MCZ
@@ -30432,7 +30422,7 @@ ObjPtr_Starpost:	dc.l Obj79	; Star pole / starpost / checkpoint
 ObjPtr_SidewaysPform:	dc.l Obj7A	; Platform that moves back and fourth on top of water in CPZ
 ObjPtr_PipeExitSpring:	dc.l Obj7B	; Warp pipe exit spring from CPZ
 ObjPtr_CPZPylon:	dc.l Obj7C	; Big pylon in foreground of CPZ
-			dc.l Obj7D	; Points that can be gotten at the end of an act (unused leftover from S1)
+			dc.l Obj7D	; Points that can be gotten at the end of an act (from S1)
 ObjPtr_SuperSonicStars:	dc.l Obj7E	; Super Sonic's stars
 ObjPtr_VineSwitch:	dc.l Obj7F	; Vine switch that you hang off in MCZ
 ObjPtr_MovingVine:	dc.l Obj80	; Vine that you hang off and it moves down from MCZ
@@ -30446,7 +30436,7 @@ ObjPtr_Flipper:		dc.l Obj86	; Flipper from CNZ
 ObjPtr_SSNumberOfRings:	dc.l Obj87	; Number of rings in Special Stage
 ObjPtr_SSTailsTails:	dc.l Obj88	; Tails' tails in Special Stage
 ObjPtr_ARZBoss:		dc.l Obj89	; ARZ boss
-			dc.l ObjNull	; Sonic Team Presents/Credits (seemingly unused leftover from S1)
+			dc.l ObjNull	; 
 ObjPtr_WFZPalSwitcher:	dc.l Obj8B	; Cycling palette switcher from Wing Fortress Zone
 ObjPtr_Whisp:		dc.l Obj8C	; Whisp (blowfly badnik) from ARZ
 ObjPtr_GrounderInWall:	dc.l Obj8D	; Grounder in wall, from ARZ
@@ -44378,7 +44368,7 @@ JmpTo3_Adjust2PArtPointer ; JmpTo
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
-; Object 7D - Points that can be gotten at the end of an act (leftover from S1)  (unused)
+; Object 7D - Points that can be gotten at the end of an act (leftover from S1)
 ; ----------------------------------------------------------------------------
 ; Sprite_1F624:
 Obj7D:
@@ -45402,7 +45392,7 @@ JmpTo8_Adjust2PArtPointer ; JmpTo
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
-; Object 12 - Emerald from Hidden Palace Zone (unused)
+; Object 12 - Emerald from Hidden Palace Zone
 ; ----------------------------------------------------------------------------
 ; Sprite_2031C:
 Obj12:
@@ -45440,7 +45430,7 @@ Obj12_Main:
 	jmpto	(DisplaySprite).l, JmpTo8_DisplaySprite
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
-; sprite mappings (unused)
+; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj12_MapUnc_20382:	BINCLUDE "mappings/sprite/obj12.bin"
 ; ===========================================================================
@@ -45468,7 +45458,7 @@ JmpTo16_DeleteObject ; JmpTo
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
-; Object 13 - Waterfall in Hidden Palace Zone (unused)
+; Object 13 - Waterfall in Hidden Palace Zone
 ; ----------------------------------------------------------------------------
 ; Sprite_203AC:
 Obj13:
@@ -45594,7 +45584,7 @@ Obj13_ChkDel:
 	jmpto	(DisplaySprite).l, JmpTo9_DisplaySprite
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
-; sprite mappings (unused)
+; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj13_MapUnc_20528:	BINCLUDE "mappings/sprite/obj13.bin"
 ; ===========================================================================
@@ -50056,221 +50046,6 @@ byte_244F8:
 ; ----------------------------------------------------------------------------
 Obj45_MapUnc_2451A:	BINCLUDE "mappings/sprite/obj45.bin"
 ; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 46 - Ball from OOZ (unused, beta leftover)
-; ----------------------------------------------------------------------------
-; Sprite_24A16:
-Obj46:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj46_Index(pc,d0.w),d1
-	jmp	Obj46_Index(pc,d1.w)
-; ===========================================================================
-; off_24A24:
-Obj46_Index:	offsetTable
-		offsetTableEntry.w Obj46_Init		; 0 - Init
-		offsetTableEntry.w Obj46_Inactive	; 2 - Ball inactive
-		offsetTableEntry.w Obj46_Moving		; 4 - Ball moving
-		offsetTableEntry.w Obj46_PressureSpring	; 6 - Pressure Spring
-; ===========================================================================
-; loc_24A2C:
-Obj46_Init:
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	+
-	bclr	#7,2(a2,d0.w)
-	bset	#0,2(a2,d0.w)
-	bne.w	JmpTo25_DeleteObject
-+
-	; loads the ball itself
-	addq.b	#2,routine(a0)
-	move.b	#$F,y_radius(a0)
-	move.b	#$F,x_radius(a0)
-	move.l	#Obj46_MapUnc_24C52,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_BallThing,3,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo20_Adjust2PArtPointer
-	move.b	#4,render_flags(a0)
-	move.b	#3,priority(a0)
-	move.w	x_pos(a0),objoff_34(a0)
-	move.w	y_pos(a0),objoff_36(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#0,mapping_frame(a0)
-	move.w	#0,objoff_14(a0)
-	move.b	#1,objoff_1F(a0)
-
-; Obj46_InitPressureSpring:	; loads the spring under the ball
-	jsrto	(SingleObjLoad).l, JmpTo4_SingleObjLoad
-	bne.s	+
-	_move.b	#ObjID_OOZBall,id(a1) ; load obj46
-	addq.b	#6,routine(a1)
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	addi.w	#$12,y_pos(a1)
-	move.l	#Obj45_MapUnc_2451A,mappings(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_PushSpring,2,0),art_tile(a1)
-	ori.b	#4,render_flags(a1)
-	move.b	#$10,width_pixels(a1)
-	move.b	#4,priority(a1)
-	move.b	#9,mapping_frame(a1)
-	move.l	a0,objoff_3C(a1)
-+
-	move.l	a1,objoff_3C(a0)
-; loc_24AEA:
-Obj46_Inactive:
-	btst	#button_A,(Ctrl_2_Press).w
-	bne.s	+
-	lea	(ButtonVine_Trigger).w,a2
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	lsr.w	#4,d0
-	tst.b	(a2,d0.w)
-	beq.s	++
-+
-	addq.b	#2,routine(a0)
-	bset	#1,status(a0)
-	move.w	#-$300,y_vel(a0)
-	move.w	#$100,objoff_14(a0)
-	movea.l	objoff_3C(a0),a1 ; a1=object
-	move.b	#1,objoff_30(a1)
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	objoff_14(a0)
-+
-	bsr.w	loc_24BF0
-	jmpto	(MarkObjGone).l, JmpTo11_MarkObjGone
-; ===========================================================================
-; loc_24B38:
-Obj46_Moving:
-	move.w	x_pos(a0),-(sp)
-	jsrto	(ObjectMove).l, JmpTo9_ObjectMove
-	btst	#1,status(a0)
-	beq.s	loc_24B8C
-	addi.w	#$18,y_vel(a0)
-	bmi.s	+
-	move.w	(Camera_Max_Y_pos_now).w,d0
-	addi.w	#$E0,d0
-	cmp.w	y_pos(a0),d0
-	blo.s	loc_24BC4
-	jsr	(ObjCheckFloorDist).l
-	tst.w	d1
-	bpl.w	+
-	add.w	d1,y_pos(a0)
-	clr.w	y_vel(a0)
-	bclr	#1,status(a0)
-	move.w	#$100,x_vel(a0)
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	x_vel(a0)
-+
-	bra.s	loc_24BA4
-; ===========================================================================
-
-loc_24B8C:
-	jsr	(ObjCheckFloorDist).l
-	cmpi.w	#8,d1
-	blt.s	loc_24BA0
-	bset	#1,status(a0)
-	bra.s	loc_24BA4
-; ===========================================================================
-
-loc_24BA0:
-	add.w	d1,y_pos(a0)
-
-loc_24BA4:
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	addi.w	#$B,d1
-	move.w	#$10,d2
-	move.w	#$11,d3
-	move.w	(sp)+,d4
-	jsrto	(SolidObject).l, JmpTo5_SolidObject
-	bsr.w	loc_24BF0
-	jmpto	(MarkObjGone).l, JmpTo11_MarkObjGone
-; ===========================================================================
-
-loc_24BC4:
-	move.w	(sp)+,d4
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	BranchTo_JmpTo25_DeleteObject
-	bclr	#7,2(a2,d0.w)
-
-    if removeJmpTos
-JmpTo25_DeleteObject ; JmpTo
-    endif
-
-BranchTo_JmpTo25_DeleteObject ; BranchTo
-	jmpto	(DeleteObject).l, JmpTo25_DeleteObject
-; ===========================================================================
-; loc_24BDC:
-Obj46_PressureSpring:
-	tst.b	objoff_30(a0)
-	beq.s	+
-	subq.b	#1,mapping_frame(a0)
-	bne.s	+
-	clr.b	objoff_30(a0)
-+
-	jmpto	(MarkObjGone).l, JmpTo11_MarkObjGone
-; ===========================================================================
-
-loc_24BF0:
-	tst.b	mapping_frame(a0)
-	beq.s	+
-	move.b	#0,mapping_frame(a0)
-	rts
-; ===========================================================================
-+
-	move.b	objoff_14(a0),d0
-	beq.s	loc_24C2A
-	bmi.s	loc_24C32
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	loc_24C2A
-	neg.b	d0
-	addq.b	#8,d0
-	bcs.s	+
-	moveq	#0,d0
-+
-	move.b	d0,anim_frame_duration(a0)
-	move.b	objoff_1F(a0),d0
-	addq.b	#1,d0
-	cmpi.b	#4,d0
-	bne.s	+
-	moveq	#1,d0
-+
-	move.b	d0,objoff_1F(a0)
-
-loc_24C2A:
-	move.b	objoff_1F(a0),mapping_frame(a0)
-	rts
-; ===========================================================================
-
-loc_24C32:
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	loc_24C2A
-	addq.b	#8,d0
-	bcs.s	+
-	moveq	#0,d0
-+
-	move.b	d0,anim_frame_duration(a0)
-	move.b	objoff_1F(a0),d0
-	subq.b	#1,d0
-	bne.s	+
-	moveq	#3,d0
-+
-	move.b	d0,objoff_1F(a0)
-	bra.s	loc_24C2A
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Unused sprite mappings
-; ----------------------------------------------------------------------------
-Obj46_MapUnc_24C52:	BINCLUDE "mappings/sprite/obj46.bin"
-; ===========================================================================
-
-    if gameRevision<2
-	nop
-    endif
 
     if ~~removeJmpTos
 JmpTo25_DeleteObject ; JmpTo
@@ -89280,7 +89055,6 @@ DbgObjList_OOZ: dbglistheader
 	dbglistobj ObjID_OOZMovingPform, Obj19_MapUnc_2222A, $23,   2, make_art_tile(ArtTile_ArtNem_OOZElevator,3,0)
 	dbglistobj ObjID_OOZSpring,	Obj45_MapUnc_2451A,   2,   0, make_art_tile(ArtTile_ArtNem_PushSpring,2,0)
 	dbglistobj ObjID_OOZSpring,	Obj45_MapUnc_2451A, $12,  $A, make_art_tile(ArtTile_ArtNem_PushSpring,2,0)
-	dbglistobj ObjID_OOZBall,	Obj46_MapUnc_24C52,   0,   1, make_art_tile(ArtTile_ArtNem_BallThing,3,0)
 	dbglistobj ObjID_Button,	Obj47_MapUnc_24D96,   0,   2, make_art_tile(ArtTile_ArtNem_Button,0,0)
 	dbglistobj ObjID_SwingingPlatform, Obj15_MapUnc_101E8, $88,   1, make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0)
 	dbglistobj ObjID_OOZLauncher,	Obj3D_MapUnc_250BA,   0,   0, make_art_tile(ArtTile_ArtNem_StripedBlocksVert,3,0)
@@ -89882,7 +89656,6 @@ PlrList_Ooz1: plrlistheader
 	plreq ArtTile_ArtNem_StripedBlocksVert, ArtNem_StripedBlocksVert
 	plreq ArtTile_ArtNem_Oilfall, ArtNem_Oilfall
 	plreq ArtTile_ArtNem_Oilfall2, ArtNem_Oilfall2
-	plreq ArtTile_ArtNem_BallThing, ArtNem_BallThing
 	plreq ArtTile_ArtNem_LaunchBall, ArtNem_LaunchBall
 PlrList_Ooz1_End
 ;---------------------------------------------------------------------------------------
@@ -91529,11 +91302,6 @@ ArtNem_Oilfall:	BINCLUDE	"art/nemesis/Cascading oil hitting oil from OOZ.bin"
 ; Cascading oil from OOZ	; ArtNem_804F2:
 	even
 ArtNem_Oilfall2:	BINCLUDE	"art/nemesis/Cascading oil from OOZ.bin"
-;--------------------------------------------------------------------------------------
-; Nemesis compressed art (20 blocks)
-; Ball thing (unused?) from OOZ	; ArtNem_805C0:
-	even
-ArtNem_BallThing:	BINCLUDE	"art/nemesis/Ball on spring from OOZ (beta holdovers).bin"
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (53 blocks)
 ; Spinball from OOZ	; ArtNem_806E0:
