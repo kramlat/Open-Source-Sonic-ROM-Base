@@ -160,7 +160,7 @@ ROMEndLoc:
 	dc.l $20202020		; Backup RAM start address
 	dc.l $20202020		; Backup RAM end address
 	dc.b "            "	; Modem support
-	dc.b "                                        "	; Notes (unused, anything can be put in this space, but it has to be 52 bytes.)
+	dc.b "                                        "	; Notes (anything can be put in this space, but it has to be 52 bytes.)
 	dc.b "JUE             " ; Country code (region)
 EndOfHeader:
 
@@ -1649,26 +1649,6 @@ JmpTo_SoundDriverLoad ; JmpTo
 	nop
 	jmp	(SoundDriverLoad).l
 ; End of function JmpTo_SoundDriverLoad
-
-; ===========================================================================
-; unused mostly-leftover subroutine to load the sound driver
-; SoundDriverLoadS1:
-	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	lea	(Z80_RAM).l,a1
-	move.b	#$F3,(a1)+	; di
-	move.b	#$F3,(a1)+	; di
-	move.b	#$C3,(a1)+	; jp
-	move.b	#0,(a1)+	; jp address low byte
-	move.b	#0,(a1)+	; jp address high byte
-	move.w	#0,(Z80_Reset).l
-	nop
-	nop
-	nop
-	nop
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	move.w	#0,(Z80_Bus_Request).l ; start the Z80
-	rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; If Music_to_play is clear, move d0 into Music_to_play,
@@ -3291,9 +3271,6 @@ CyclingPal_SBZList2:
 end_SBZCycList2:
 	even
 
-; ----------------------------------------------------------------------------
-; word_1E5A:
-	BINCLUDE "art/palettes/Title Water.bin"; S1 Title Screen Water palette (unused)
 ; word_1E7A:
 CyclingPal_EHZ_ARZ_Water:
 	BINCLUDE "art/palettes/EHZ ARZ Water.bin"; Emerald Hill/Aquatic Ruin Rotating Water palette
@@ -4396,9 +4373,6 @@ SegaScreen:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Trails),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_IntroTrails).l,a0
 	bsr.w	NemDec
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtUnc_Giant_Sonic),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_SilverSonic).l,a0 ; ?? seems unused here
-	bsr.w	NemDec
 	lea	(Chunk_Table).l,a1
 	lea	(MapEng_SEGA).l,a0
 	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
@@ -4845,11 +4819,8 @@ JmpTo_SwScrl_Title ; JmpTo
 ; loc_3EC4:
 Level:
 	bset	#GameModeFlag_TitleCard,(Game_Mode).w ; add $80 to screen mode (for pre level sequence)
-	tst.w	(Demo_mode_flag).w	; test the old flag for the credits demos (now unused)
-	bmi.s	+
 	move.b	#MusID_FadeOut,d0
 	bsr.w	PlaySound	; fade out music
-+
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
 	tst.w	(Demo_mode_flag).w
@@ -5830,9 +5801,9 @@ MoveSonicInDemo:
 	rts
 ; ---------------------------------------------------------------------------
 ; demo recording routine
-; (unused/dead code, but obviously used during development)
+; (obviously used during development)
 ; ---------------------------------------------------------------------------
-; MoveDemo_Record: loc_4828:
+MoveDemo_Record:
 	; calculate output location of recorded player 1 demo?
 	lea	(DemoScriptPointers).l,a1
 	moveq	#0,d0
@@ -6222,7 +6193,7 @@ ChangeRingFrame:
 	subq.b	#1,(Logspike_anim_counter).w
 	bpl.s	+
 	move.b	#$B,(Logspike_anim_counter).w
-	subq.b	#1,(Logspike_anim_frame).w ; animate unused log spikes
+	subq.b	#1,(Logspike_anim_frame).w
 	andi.b	#7,(Logspike_anim_frame).w
 +
 	subq.b	#1,(Rings_anim_counter).w
@@ -7273,7 +7244,6 @@ SSTrack_Draw:
 	move.b	(a2)+,d2										; Ignore the first 3 bytes
 	move.b	(a2)+,d2										; Why not 'addq.l	#3,a2'?
 	move.b	(a2)+,d2
-	move.b	(a2)+,d2										; Get byte (unused)
 	move.l	a0,(SSTrack_mappings_bitflags).w				; Save pointer to bit flags mappings
 	move.l	a0,(SSTrack_last_mappings).w					; ... twice
 	move.l	a1,(SSTrack_mappings_uncompressed).w			; Save pointer to uncompressed mappings
@@ -10338,33 +10308,33 @@ SSStartNewAct:
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with both sonic and tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level. Last part is unused.
+; stage, corresponding to the four possible parts of the level.
 ; ----------------------------------------------------------------------------
 ; Misc_7756:
 SpecialStage_RingReq_Team:
-	dc.b  40, 80,140,120	; 4
-	dc.b  50,100,140,150	; 8
-	dc.b  60,110,160,170	; 12
-	dc.b  40,100,150,160	; 16
-	dc.b  55,110,200,200	; 20
-	dc.b  80,140,220,220	; 24
-	dc.b 100,190,210,210	; 28
+	dc.b  40, 80,140	; 4
+	dc.b  50,100,140	; 8
+	dc.b  60,110,160	; 12
+	dc.b  40,100,150	; 16
+	dc.b  55,110,200	; 20
+	dc.b  80,140,220	; 24
+	dc.b 100,190,210	; 28
 ; ----------------------------------------------------------------------------
 ; Ring requirement values for Sonic or Tails alone games
 ;
 ; This array stores the number of rings you need to get to complete each round
 ; of each special stage, while playing with either sonic or tails. 4 bytes per
-; stage, corresponding to the four possible parts of the level. Last part is unused.
+; stage, corresponding to the four possible parts of the level.
 ; ----------------------------------------------------------------------------
 ; Misc_7772:
 SpecialStage_RingReq_Alone:
-	dc.b  30, 70,130,110	; 4
-	dc.b  50,100,140,140	; 8
-	dc.b  50,110,160,160	; 12
-	dc.b  40,110,150,150	; 16
-	dc.b  50, 90,160,160	; 20
-	dc.b  80,140,210,210	; 24
-	dc.b 100,150,190,190	; 28
+	dc.b  30, 70,130    ; 4
+	dc.b  50,100,140    ; 8
+	dc.b  50,110,160	; 12
+	dc.b  40,110,150	; 16
+	dc.b  50, 90,160	; 20
+	dc.b  80,140,210	; 24
+	dc.b 100,150,190	; 28
 
 ; special stage palette table
 ; word_778E:
@@ -15161,13 +15131,12 @@ LevelSizeLoad:
 	lea	LevelSize(pc,d0.w),a0
 	move.l	(a0)+,d0
 	move.l	d0,(Camera_Min_X_pos).w
-	move.l	d0,(unk_EEC0).w	; unused besides this one write...
 	move.l	d0,(Tails_Min_X_pos).w
 	move.l	(a0)+,d0
 	move.l	d0,(Camera_Min_Y_pos).w
 	; Warning: unk_EEC4 is only a word long, this line also writes to Camera_Max_Y_pos
 	; If you remove this instruction, the camera will scroll up until it kills Sonic
-	move.l	d0,(unk_EEC4).w	; unused besides this one write...
+	move.l	d0,(unk_EEC4).w	;
 	move.l	d0,(Tails_Min_Y_pos).w
 	move.w	#$1010,(Horiz_block_crossed_flag).w
 	move.w	#(224/2)-16,(Camera_Y_pos_bias).w
@@ -16214,9 +16183,6 @@ sub_C71A:
 	rts
 ; End of function sub_C71A
 
-; ===========================================================================
-; unused...
-; loc_C7BA:
 SwScrl_Lev2:
     if gameRevision<2
 	move.w	(Camera_X_pos_diff).w,d4
@@ -16594,9 +16560,6 @@ SwScrl_HTZ_2P:
 	dbf	d1,-
 
 	rts
-; ===========================================================================
-; unused...
-; loc_CBA0:
 SwScrl_HPZ:
 	move.w	(Camera_X_pos_diff).w,d4
 	ext.l	d4
@@ -18634,9 +18597,6 @@ SwScrl_Minimal:
 	dbf	d1,-
 
 	rts
-; ===========================================================================
-; unused...
-; loc_D69E:
 SwScrl_HPZ_Continued:
 	lea	(Horiz_Scroll_Buf).w,a1
 	move.w	#$E,d1
@@ -19336,47 +19296,6 @@ SetHorizScrollFlagsBG2:	; only used by CPZ
 ; End of function SetHorizScrollFlagsBG2
 
 ; ===========================================================================
-; some apparently unused code
-;SetHorizScrollFlagsBG3:
-	move.l	(Camera_BG3_X_pos).w,d2
-	move.l	d2,d0
-	add.l	d4,d0
-	move.l	d0,(Camera_BG3_X_pos).w
-	move.l	d0,d1
-	swap	d1
-	andi.w	#$10,d1
-	move.b	(Horiz_block_crossed_flag_BG3).w,d3
-	eor.b	d3,d1
-	bne.s	++	; rts
-	eori.b	#$10,(Horiz_block_crossed_flag_BG3).w
-	sub.l	d2,d0
-	bpl.s	+
-	bset	d6,(Scroll_flags_BG3).w
-	bra.s	++	; rts
-; ===========================================================================
-+
-	addq.b	#1,d6
-	bset	d6,(Scroll_flags_BG3).w
-+
-	rts
-; ===========================================================================
-; Unused - dead code leftover from S1:
-	lea	(VDP_control_port).l,a5
-	lea	(VDP_data_port).l,a6
-	lea	(Scroll_flags_BG).w,a2
-	lea	(Camera_BG_X_pos).w,a3
-	lea	(Level_Layout+$80).w,a4
-	move.w	#vdpComm(VRAM_Plane_B_Name_Table,VRAM,WRITE)>>16,d2
-	bsr.w	Draw_BG1
-	lea	(Scroll_flags_BG2).w,a2
-	lea	(Camera_BG2_X_pos).w,a3
-	bra.w	Draw_BG2
-
-; ===========================================================================
-
-
-
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to display correct tiles as you move
 ; ---------------------------------------------------------------------------
@@ -19680,62 +19599,6 @@ SBZ_CameraSections:
 	dc.b   2	; 31
 	dc.b   2	; 32
 	even
-; ===========================================================================
-; Scrap Brain Zone 1 drawing code -- S1 left-over
-; Compare with CPZ drawing code
-; begin unused routine
-	moveq	#-$10,d4
-	bclr	#0,(a2)
-	bne.s	+
-	bclr	#1,(a2)
-	beq.s	+++
-	move.w	#$E0,d4
-+
-	lea_	SBZ_CameraSections+1,a0
-	move.w	(Camera_BG_Y_pos).w,d0
-	add.w	d4,d0
-	andi.w	#$1F0,d0
-	lsr.w	#4,d0
-	move.b	(a0,d0.w),d0
-	lea	(BGCameraLookup).l,a3
-	movea.w	(a3,d0.w),a3	; Camera, either BG, BG2 or BG3 depending on Y
-	beq.s	+
-	moveq	#-$10,d5
-	movem.l	d4-d5,-(sp)
-	bsr.w	CalcBlockVRAMPos
-	movem.l	(sp)+,d4-d5
-	bsr.w	DrawBlockRow1
-	bra.s	++
-; ===========================================================================
-+
-	moveq	#0,d5
-	movem.l	d4-d5,-(sp)
-	bsr.w	CalcBlockVRAMPos2
-	movem.l	(sp)+,d4-d5
-	moveq	#$1F,d6
-	bsr.w	DrawBlockRow2
-+
-	tst.b	(a2)
-	bne.s	+
-	rts
-; ===========================================================================
-+
-	moveq	#-$10,d4
-	moveq	#-$10,d5
-	move.b	(a2),d0
-	andi.b	#-$58,d0
-	beq.s	+
-	lsr.b	#1,d0
-	move.b	d0,(a2)
-	move.w	#320,d5
-+
-	lea_	SBZ_CameraSections,a0
-	move.w	(Camera_BG_Y_pos).w,d0
-	andi.w	#$1F0,d0
-	lsr.w	#4,d0
-	lea	(a0,d0.w),a0
-	bra.w	loc_DE86
-; end unused routine
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -21422,25 +21285,6 @@ ScrollBG:
 ; End of function ScrollBG
 
 ; ===========================================================================
-	; unused/dead code
-	; This code is probably meant for testing the background scrolling code
-	; used by HTZ and WFZ. It would allows the BG position to be shifted up
-	; and down by the second controller.
-	btst	#button_up,(Ctrl_2_Held).w
-	beq.s	+
-	tst.w	(Camera_BG_Y_offset).w
-	beq.s	+
-	subq.w	#1,(Camera_BG_Y_offset).w
-+
-	btst	#button_down,(Ctrl_2_Held).w
-	beq.s	+
-	cmpi.w	#$700,(Camera_BG_Y_offset).w
-	beq.s	+
-	addq.w	#1,(Camera_BG_Y_offset).w
-+
-	rts
-; ===========================================================================
-
 ; sub_EBEA:
 LevEvents_HTZ2:
 	bsr.w	LevEvents_HTZ2_Prepare
@@ -25797,7 +25641,7 @@ Obj37_Delete:
 
 ; Unused - dead code/data S1 big ring:
 ; ===========================================================================
-; BigRing:
+ObjDD:
 	; a0=object
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -25869,7 +25713,7 @@ BigRing_Delete:
 
 ; Unused - dead code/data S1 ring flash:
 ; ===========================================================================
-; BigRingFlash:
+ObjDE:
 	; a0=object
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -30224,7 +30068,7 @@ Obj3B_MapUnc_15D2E:	BINCLUDE "mappings/sprite/obj3B.bin"
     endif
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
-; Object 3C - Breakable wall (leftover from S1) (mostly unused)
+; Object 3C - Breakable wall
 ; ----------------------------------------------------------------------------
 ; Sprite_15D44:
 Obj3C:
@@ -30463,7 +30307,7 @@ ObjPtr_Splash:		dc.l Obj08	; Water splash in Aquatic Ruin Zone, Spindash dust
 ObjPtr_SonicSS:		dc.l Obj09	; Sonic in Special Stage
 ObjPtr_SmallBubbles:	dc.l Obj0A	; Small bubbles from Sonic's face while underwater
 ObjPtr_TippingFloor:	dc.l Obj0B	; Section of pipe that tips you off from CPZ
-			dc.l Obj0C	; Small floating platform (unused)
+			dc.l ObjNull	; Small floating platform (unused)
 ObjPtr_Signpost:	dc.l Obj0D	; End of level signpost
 ObjPtr_IntroStars:	dc.l Obj0E	; Flashing stars from intro
 ObjPtr_TitleMenu:	dc.l Obj0F	; Title screen menu
@@ -30517,8 +30361,8 @@ ObjPtr_Shield:		dc.l Obj38	; Shield
 ObjPtr_GameOver:
 ObjPtr_TimeOver:	dc.l Obj39	; Game/Time Over text
 ObjPtr_Results:		dc.l Obj3A	; End of level results screen
-			dc.l Obj3B	; Purple rock (from Sonic 1, unused)
-			dc.l Obj3C	; Breakable wall (leftover from S1) (mostly unused)
+			dc.l Obj3B	; Purple rock
+			dc.l Obj3C	; Breakable wall
 ObjPtr_OOZLauncher:	dc.l Obj3D	; Block thingy in OOZ that launches you into the round ball things
 ObjPtr_EggPrison:	dc.l Obj3E	; Egg prison
 ObjPtr_Fan:		dc.l Obj3F	; Fan from OOZ
@@ -30602,7 +30446,7 @@ ObjPtr_Flipper:		dc.l Obj86	; Flipper from CNZ
 ObjPtr_SSNumberOfRings:	dc.l Obj87	; Number of rings in Special Stage
 ObjPtr_SSTailsTails:	dc.l Obj88	; Tails' tails in Special Stage
 ObjPtr_ARZBoss:		dc.l Obj89	; ARZ boss
-			dc.l Obj8A	; Sonic Team Presents/Credits (seemingly unused leftover from S1)
+			dc.l ObjNull	; Sonic Team Presents/Credits (seemingly unused leftover from S1)
 ObjPtr_WFZPalSwitcher:	dc.l Obj8B	; Cycling palette switcher from Wing Fortress Zone
 ObjPtr_Whisp:		dc.l Obj8C	; Whisp (blowfly badnik) from ARZ
 ObjPtr_GrounderInWall:	dc.l Obj8D	; Grounder in wall, from ARZ
@@ -30635,7 +30479,7 @@ ObjPtr_Grabber:		dc.l ObjA7	; Grabber (spider badnik) from CPZ
 ObjPtr_GrabberLegs:	dc.l ObjA8	; Grabber's legs from CPZ
 ObjPtr_GrabberBox:	dc.l ObjA9	; The little hanger box thing a Grabber's string comes out of
 ObjPtr_GrabberString:	dc.l ObjAA	; The thin white string a Grabber hangs from
-			dc.l ObjAB	; Unknown (maybe unused?)
+			dc.l ObjNull	; Unknown
 ObjPtr_Balkiry:		dc.l ObjAC	; Balkiry (jet badnik) from SCZ
 ObjPtr_CluckerBase:	dc.l ObjAD	; Clucker's base from WFZ
 ObjPtr_Clucker:		dc.l ObjAE	; Clucker (chicken badnik) from WFZ
@@ -30651,7 +30495,7 @@ ObjPtr_VerticalLaser:	dc.l ObjB7	; Unused huge vertical laser from WFZ
 ObjPtr_WallTurret:	dc.l ObjB8	; Wall turret from WFZ
 ObjPtr_Laser:		dc.l ObjB9	; Laser from WFZ that shoots down the Tornado
 ObjPtr_WFZWheel:	dc.l ObjBA	; Wheel from WFZ
-			dc.l ObjBB	; Unknown
+			dc.l ObjNull	; Unknown
 ObjPtr_WFZShipFire:	dc.l ObjBC	; Fire coming out of Robotnik's ship in WFZ
 ObjPtr_SmallMetalPform:	dc.l ObjBD	; Ascending/descending metal platforms from WFZ
 ObjPtr_LateralCannon:	dc.l ObjBE	; Lateral cannon (temporary platform that pops in/out) from WFZ
@@ -30673,7 +30517,7 @@ ObjPtr_EndingSeqBird:	dc.l ObjCD	; Birds from ending sequence
 ObjPtr_EndingSeqSonic:
 ObjPtr_EndingSeqTails:	dc.l ObjCE	; Sonic and Tails jumping off the plane from ending sequence
 ObjPtr_TornadoHelixes:	dc.l ObjCF	;"Plane's helixes" from ending sequence
-			dc.l ObjNull	; ObjD0
+			dc.l ObjD0	; ObjD0
 			dc.l ObjNull	; ObjD1
 ObjPtr_CNZRectBlocks:	dc.l ObjD2	; Flashing blocks that appear and disappear in a rectangular shape that you can walk across, from CNZ
 ObjPtr_BombPrize:	dc.l ObjD3	; Bomb prize from CNZ
@@ -30687,8 +30531,8 @@ ObjPtr_ContinueText:
 ObjPtr_ContinueIcons:	dc.l ObjDA	; Continue text
 ObjPtr_ContinueChars:	dc.l ObjDB	; Sonic lying down or Tails nagging (continue screen)
 ObjPtr_RingPrize:	dc.l ObjDC	; Ring prize from Casino Night Zone
-			dc.l ObjNull	; ObjDD
-			dc.l ObjNull	; ObjDE
+			dc.l ObjDD			; Big Ring
+			dc.l ObjDE			; Big Ring Flash
 			dc.l ObjNull	; ObjDF
 			dc.l ObjNull	; ObjE0
 			dc.l ObjNull	; ObjE1
@@ -30732,6 +30576,75 @@ ObjPtr_RingPrize:	dc.l ObjDC	; Ring prize from Casino Night Zone
 ObjNull: ;;
 	bra.w	DeleteObject
 
+;----------------------------------------------------
+; Object 44 - GHZ wall
+;----------------------------------------------------
+
+ObjD0:					; DATA XREF: ROM:Obj_Indexo
+		moveq	#0,d0
+		move.b	$24(a0),d0
+		move.w	ObjD0_Index(pc,d0.w),d1
+		jmp	ObjD0_Index(pc,d1.w)
+; ===========================================================================
+ObjD0_Index:	dc.w loc2b_EEC8-ObjD0_Index ; DATA XREF: ROM:ObjD0_Indexo
+					; ROM:0000EEC4o ...
+		dc.w loc2b_EF04-ObjD0_Index
+		dc.w loc2b_EF18-ObjD0_Index
+; ===========================================================================
+
+loc2b_EEC8:				; DATA XREF: ROM:ObjD0_Indexo
+		addq.b	#2,$24(a0)
+		move.l	#Map_Obj44,4(a0)
+		move.w	#$434C,2(a0)
+		bsr.w	Adjust2PArtPointer
+		ori.b	#4,1(a0)
+		move.b	#8,$19(a0)
+		move.b	#6,$18(a0)
+		move.b	$28(a0),$1A(a0)
+		bclr	#4,$1A(a0)
+		beq.s	loc2b_EF04
+		addq.b	#2,$24(a0)
+		bra.s	loc2b_EF18
+; ===========================================================================
+
+loc2b_EF04:				; CODE XREF: ROM:0000EEFCj
+					; DATA XREF: ROM:0000EEC4o
+		move.w	#$13,d1
+		move.w	#$28,d2	; '('
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	8(a0),d4
+		bsr.w	SolidObject
+
+loc2b_EF18:				; CODE XREF: ROM:0000EF02j
+					; DATA XREF: ROM:0000EEC6o
+		move.w	8(a0),d0
+		andi.w	#$FF80,d0
+		sub.w	($FFFFF7DA).w,d0
+		cmpi.w	#$280,d0
+		bhi.w	DeleteObject
+		bra.w	DisplaySprite
+; ===========================================================================
+Map_Obj44:	dc.w word_EF36-Map_Obj44 ; DATA	XREF: ROM:0000EECCo
+					; ROM:Map_Obj44o ...
+		dc.w word_EF58-Map_Obj44
+		dc.w word_EF7A-Map_Obj44
+word_EF36:	dc.w 4			; DATA XREF: ROM:Map_Obj44o
+		dc.w $E005,    4,    2,$FFF8; 0
+		dc.w $F005,    8,    4,$FFF8; 4
+		dc.w	 5,    8,    4,$FFF8; 8
+		dc.w $1005,    8,    4,$FFF8; 12
+word_EF58:	dc.w 4			; DATA XREF: ROM:0000EF32o
+		dc.w $E005,    8,    4,$FFF8; 0
+		dc.w $F005,    8,    4,$FFF8; 4
+		dc.w	 5,    8,    4,$FFF8; 8
+		dc.w $1005,    8,    4,$FFF8; 12
+word_EF7A:	dc.w 4			; DATA XREF: ROM:0000EF34o
+		dc.w $E005,    0,    0,$FFF8; 0
+		dc.w $F005,    0,    0,$FFF8; 4
+		dc.w	 5,    0,    0,$FFF8; 8
+		dc.w $1005,    0,    0,$FFF8; 12
+; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to make an object move and fall downward increasingly fast
 ; This moves the object horizontally and vertically
@@ -32143,43 +32056,6 @@ byte_16F06:
 	dc.b $18,$18,$18,$18	; 12
 	dc.b $20,$20,$20,$20	; 16
 
-; ===========================================================================
-; loc_16F16: ; unused/dead code? ; a0=object
-	move.w	x_pos(a0),d0
-	sub.w	(Camera_X_pos).w,d0
-	bmi.s	+
-	cmpi.w	#320,d0
-	bge.s	+
-	move.w	y_pos(a0),d1
-	sub.w	(Camera_Y_pos).w,d1
-	bmi.s	+
-	cmpi.w	#$E0,d1
-	bge.s	+
-	moveq	#0,d0
-	rts
-+	moveq	#1,d0
-	rts
-; ===========================================================================
-; loc_16F3E: ; unused/dead code? ; a0=object
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	move.w	x_pos(a0),d0
-	sub.w	(Camera_X_pos).w,d0
-	add.w	d1,d0
-	bmi.s	+
-	add.w	d1,d1
-	sub.w	d1,d0
-	cmpi.w	#320,d0
-	bge.s	+
-	move.w	y_pos(a0),d1
-	sub.w	(Camera_Y_pos).w,d1
-	bmi.s	+
-	cmpi.w	#$E0,d1
-	bge.s	+
-	moveq	#0,d0
-	rts
-+	moveq	#1,d0
-	rts
 ; ===========================================================================
 
     if gameRevision=1
@@ -35328,46 +35204,6 @@ loc_1981E:
 	rts
 
 ; ===========================================================================
-; unused/dead code for some SolidObject check
-; This is for a sloped object that is sloped at the top and at the bottom.
-; SolidObject_Unk: loc_19828:
-;DoubleSlopedSolid:
-	; a0=object
-	lea	(MainCharacter).w,a1 ; a1=character
-	moveq	#p1_standing_bit,d6
-	movem.l	d1-d4,-(sp)
-	bsr.s	+
-	movem.l	(sp)+,d1-d4
-	lea	(Sidekick).w,a1 ; a1=character
-	addq.b	#1,d6
-+
-	btst	d6,status(a0)
-	beq.w	DoubleSlopedSolid_cont
-	move.w	d1,d2
-	add.w	d2,d2
-	btst	#1,status(a1)
-	bne.s	loc_19862
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	add.w	d1,d0
-	bmi.s	loc_19862
-	cmp.w	d2,d0
-	blo.s	loc_19876
-
-loc_19862:
-	bclr	#3,status(a1)
-	bset	#1,status(a1)
-	bclr	d6,status(a0)
-	moveq	#0,d4
-	rts
-; ---------------------------------------------------------------------------
-loc_19876:
-	move.w	d4,d2
-	bsr.w	MvSonicOnDoubleSlope
-	moveq	#0,d4
-	rts
-
-; ===========================================================================
 ; loc_19880:
 SolidObject45:
 	lea	(MainCharacter).w,a1 ; a1=character
@@ -35470,44 +35306,6 @@ SlopedSolid_cont:
 	bmi.w	SolidObject_TestClearPush
 	move.w	d2,d4
 	add.w	d4,d4
-	cmp.w	d4,d3
-	bhs.w	SolidObject_TestClearPush
-	bra.w	SolidObject_ChkBounds
-; ===========================================================================
-; unused/dead code
-; loc_19988: SolidObject_Unk_cont:
-DoubleSlopedSolid_cont:
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	add.w	d1,d0
-	bmi.w	SolidObject_TestClearPush
-	move.w	d1,d3
-	add.w	d3,d3
-	cmp.w	d3,d0
-	bhi.w	SolidObject_TestClearPush
-	move.w	d0,d5
-	btst	#0,render_flags(a0)
-	beq.s	+
-	not.w	d5
-	add.w	d3,d5
-+
-	andi.w	#$FFFE,d5
-	move.b	(a2,d5.w),d3
-	move.b	1(a2,d5.w),d2
-	ext.w	d2
-	ext.w	d3
-	move.w	y_pos(a0),d5
-	sub.w	d3,d5
-	move.w	y_pos(a1),d3
-	sub.w	d5,d3
-	move.b	y_radius(a1),d5
-	ext.w	d5
-	add.w	d5,d3
-	addq.w	#4,d3
-	bmi.w	SolidObject_TestClearPush
-	add.w	d5,d2
-	move.w	d2,d4
-	add.w	d5,d4
 	cmp.w	d4,d3
 	bhs.w	SolidObject_TestClearPush
 	bra.w	SolidObject_ChkBounds
@@ -35721,12 +35519,6 @@ loc_19B8E:
 MvSonicOnPtfm:
 	move.w	y_pos(a0),d0
 	sub.w	d3,d0
-	bra.s	loc_19BA2
-; ===========================================================================
-	; a couple lines of unused/leftover/dead code from Sonic 1 ; a0=object
-	move.w	y_pos(a0),d0
-	subi.w	#9,d0
-
 loc_19BA2:
 	tst.b	obj_control(a1)
 	bmi.s	return_19BCA
@@ -35771,25 +35563,6 @@ loc_19BEC:
 
 return_19C0C:
 	rts
-; ===========================================================================
-; unused/dead code.
-; loc_19C0E:
-MvSonicOnDoubleSlope:
-	btst	#3,status(a1)
-	beq.s	return_19C0C
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	add.w	d1,d0
-	btst	#0,render_flags(a0)
-	beq.s	loc_19C2C
-	not.w	d0
-	add.w	d1,d0
-
-loc_19C2C:
-	andi.w	#$FFFE,d0
-	bra.s	loc_19BEC
-; ===========================================================================
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to collide Sonic/Tails with the top of a platform
 ; ---------------------------------------------------------------------------
@@ -38080,7 +37853,6 @@ Obj01_Hurt:
 ; loc_1B13A:
 Obj01_Hurt_Normal:
 	tst.b	routine_secondary(a0)
-	bmi.w	Sonic_HurtInstantRecover
 	jsr	(ObjectMove).l
 	addi.w	#$30,y_vel(a0)
 	btst	#6,status(a0)
@@ -38119,18 +37891,6 @@ Sonic_HurtStop:
 
 return_1B1C8:
 	rts
-; ===========================================================================
-; makes Sonic recover control after being hurt before landing
-; seems to be unused
-; loc_1B1CA:
-Sonic_HurtInstantRecover:
-	subq.b	#2,routine(a0)	; => Obj01_Control
-	move.b	#0,routine_secondary(a0)
-	bsr.w	Sonic_RecordPos
-	bsr.w	Sonic_Animate
-	bsr.w	LoadSonicDynPLC
-	jmp	(DisplaySprite).l
-; ===========================================================================
 
 ; ---------------------------------------------------------------------------
 ; Sonic when he dies
@@ -43776,11 +43536,6 @@ loc_1ECD4:
 	rts
 ; ===========================================================================
 
-	; a bit of unused/dead code here
-;CheckFloorDist:
-	move.w	y_pos(a0),d2 ; a0=character
-	move.w	x_pos(a0),d3
-
 ; Checks a 16x16 block to find solid ground. May check an additional
 ; 16x16 block up for ceilings.
 ; d2 = y_pos
@@ -43807,31 +43562,6 @@ loc_1ECFE:
 	move.b	d2,d3
 +
 	rts
-; ===========================================================================
-
-	; Unused collision checking subroutine
-
-	move.w	x_pos(a0),d3 ; a0=character
-	move.w	y_pos(a0),d2
-	subq.w	#4,d2
-	move.l	#Primary_Collision,(Collision_addr).w
-	cmpi.b	#$D,lrb_solid_bit(a0)
-	beq.s	+
-	move.l	#Secondary_Collision,(Collision_addr).w
-+
-	lea	(Primary_Angle).w,a4
-	move.b	#0,(a4)
-	movea.w	#$10,a3
-	move.w	#0,d6
-	move.b	lrb_solid_bit(a0),d5
-	bsr.w	FindFloor
-	move.b	(Primary_Angle).w,d3
-	btst	#0,d3
-	beq.s	+
-	move.b	#0,d3
-+
-	rts
-
 ; ===========================================================================
 ; loc_1ED56:
 ChkFloorEdge:
@@ -44091,12 +43821,6 @@ Sonic_CheckCeiling:
 	move.b	#$80,d2
 	bra.w	loc_1ECC6
 ; End of function Sonic_CheckCeiling
-
-; ===========================================================================
-	; a bit of unused/dead code here
-;CheckCeilingDist:
-	move.w	y_pos(a0),d2 ; a0=character
-	move.w	x_pos(a0),d3
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -45675,125 +45399,6 @@ JmpTo8_Adjust2PArtPointer ; JmpTo
 
 	align 4
     endif
-
-
-
-
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 0C - Small floating platform (unused)
-; (used in CPZ in the Nick Arcade prototype)
-; ----------------------------------------------------------------------------
-; Sprite_20210:
-Obj0C:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj0C_Index(pc,d0.w),d1
-	jmp	Obj0C_Index(pc,d1.w)
-; ===========================================================================
-; off_2021E
-Obj0C_Index:	offsetTable
-		offsetTableEntry.w Obj0C_Init	; 0
-		offsetTableEntry.w Obj0C_Main	; 2
-; ===========================================================================
-; loc_20222:
-Obj0C_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj0C_MapUnc_202FA,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_FloatPlatform,3,1),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo9_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
-	move.w	y_pos(a0),d0
-	subi.w	#$10,d0
-	move.w	d0,objoff_3A(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	andi.w	#$F0,d0
-	addi.w	#$10,d0
-	move.w	d0,d1
-	subq.w	#1,d0
-	move.w	d0,objoff_30(a0)
-	move.w	d0,objoff_32(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	andi.w	#$F,d0
-	move.b	d0,objoff_3E(a0)
-	move.b	d0,objoff_3F(a0)
-; loc_20282:
-Obj0C_Main:
-	move.b	objoff_3C(a0),d0
-	beq.s	loc_202C0
-	cmpi.b	#$80,d0
-	bne.s	loc_202D0
-	move.b	objoff_3D(a0),d1
-	bne.s	loc_202A2
-	subq.b	#1,objoff_3E(a0)
-	bpl.s	loc_202A2
-	move.b	objoff_3F(a0),objoff_3E(a0)
-	bra.s	loc_202D0
-; ===========================================================================
-
-loc_202A2:
-	addq.b	#1,objoff_3D(a0)
-	move.b	d1,d0
-	jsrto	(CalcSine).l, JmpTo5_CalcSine
-	addi_.w	#8,d0
-	asr.w	#6,d0
-	subi.w	#$10,d0
-	add.w	objoff_3A(a0),d0
-	move.w	d0,y_pos(a0)
-	bra.s	loc_202E6
-; ===========================================================================
-
-loc_202C0:
-	move.w	(Vint_runcount+2).w,d1
-	andi.w	#$3FF,d1
-	bne.s	loc_202D4
-	move.b	#1,objoff_3D(a0)
-
-loc_202D0:
-	addq.b	#1,objoff_3C(a0)
-
-loc_202D4:
-	jsrto	(CalcSine).l, JmpTo5_CalcSine
-	addi_.w	#8,d1
-	asr.w	#4,d1
-	add.w	objoff_3A(a0),d1
-	move.w	d1,y_pos(a0)
-
-loc_202E6:
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	moveq	#9,d3
-	move.w	x_pos(a0),d4
-	bsr.w	PlatformObject
-	jmpto	(MarkObjGone).l, JmpTo4_MarkObjGone
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Unused sprite mappings
-; ----------------------------------------------------------------------------
-Obj0C_MapUnc_202FA:	BINCLUDE "mappings/sprite/obj0C.bin"
-; ===========================================================================
-
-    if gameRevision<2
-	nop
-    endif
-
-    if ~~removeJmpTos
-JmpTo4_MarkObjGone ; JmpTo
-	jmp	(MarkObjGone).l
-JmpTo9_Adjust2PArtPointer ; JmpTo
-	jmp	(Adjust2PArtPointer).l
-JmpTo5_CalcSine ; JmpTo
-	jmp	(CalcSine).l
-
-	align 4
-    endif
-
-
-
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -48079,13 +47684,6 @@ Obj1D_Index:	offsetTable
 		offsetTableEntry.w Obj1D_MoveArc	; 4
 		offsetTableEntry.w Obj1D_Wait		; 6
 		offsetTableEntry.w Obj1D_MoveStraight	; 8
-; ---------------------------------------------------------------------------
-; unused table of speed values
-; word_22420:
-	dc.w -$480
-	dc.w -$500
-	dc.w -$600
-	dc.w -$700
 ; ===========================================================================
 ; loc_22428:
 Obj1D_Init:
@@ -64057,16 +63655,6 @@ Obj5D_Gunk_Droplets_Move:
 	bra.w	JmpTo51_DeleteObject
 ; ===========================================================================
 
-	; a bit of unused/dead code here
-	add.w	d1,y_pos(a0) ; a0=object
-	move.w	y_vel(a0),d0
-	lsr.w	#1,d0
-	neg.w	d0
-	move.w	d0,y_vel(a0)
-	jmpto	(DisplaySprite).l, JmpTo34_DisplaySprite
-
-; ===========================================================================
-
 Obj5D_Robotnik:
 	movea.l	Obj5D_parent(a0),a1 ; a1=object
 	move.l	x_pos(a1),x_pos(a0)
@@ -73091,26 +72679,6 @@ loc_361D8:
 
 	rts
 ; ===========================================================================
-	; unused/dead code ; a0=object
-	cmpi.b	#$B,(SSTrack_drawing_index).w
-	blo.s	loc_36208
-	subi.l	#$4445,objoff_30(a0)
-	bra.s	loc_36210
-; ---------------------------------------------------------------------------
-loc_36208:
-	subi.l	#$4444,objoff_30(a0)
-loc_36210:
-	move.w	objoff_30(a0),d0
-	cmpi.w	#$1D,d0
-	ble.s	+
-	moveq	#$1E,d0
-+
-	lea_	byte_35180,a1
-	move.b	(a1,d0.w),anim(a0)
-	rts
-	; end of unused code
-
-; ===========================================================================
 ; animation script for object 59
 off_36228:	offsetTable
 		offsetTableEntry.w byte_3623C	; 0
@@ -73370,7 +72938,7 @@ SubObjData_Index: offsetTable
 	offsetTableEntry.w ObjB8_SubObjData	; $74
 	offsetTableEntry.w ObjB9_SubObjData	; $76
 	offsetTableEntry.w ObjBA_SubObjData	; $78
-	offsetTableEntry.w ObjBB_SubObjData	; $7A
+	offsetTableEntry.w Invalid_SubObjData2	; $7A
 	offsetTableEntry.w ObjBC_SubObjData2	; $7C
 	offsetTableEntry.w ObjBD_SubObjData	; $7E
 	offsetTableEntry.w ObjBD_SubObjData	; $80
@@ -73594,18 +73162,6 @@ LoadChildObject:
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 +
-	rts
-; ===========================================================================
-	; unused/dead code ; a0=object
-	bsr.w	Obj_GetOrientationToPlayer
-	bclr	#0,render_flags(a0)
-	bclr	#0,status(a0)
-	tst.w	d0
-	beq.s	return_36818
-	bset	#0,render_flags(a0)
-	bset	#0,status(a0)
-
-return_36818:
 	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -77502,33 +77058,6 @@ ObjAA_Main:
 +
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object AB - Removed object (unknown, unused)
-; ----------------------------------------------------------------------------
-; Sprite_390A2:
-ObjAB:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	ObjAB_Index(pc,d0.w),d1
-	jmp	ObjAB_Index(pc,d1.w)
-; ===========================================================================
-; off_390B0:
-ObjAB_Index:	offsetTable
-		offsetTableEntry.w ObjAB_Init
-		offsetTableEntry.w ObjAB_Main
-; ===========================================================================
-; BranchTo4_LoadSubObject
-ObjAB_Init:
-	bra.w	LoadSubObject
-; ===========================================================================
-; BranchTo10_JmpTo39_MarkObjGone
-ObjAB_Main:
-	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
-; ===========================================================================
-; END OF OBJECT AB
-
-
 ; ---------------------------------------------------------------------------
 ; Some subroutine for the Grabber badnik
 ; ---------------------------------------------------------------------------
@@ -80099,10 +79628,6 @@ word_3AFC0:
 	dc.w objoff_3A
 	dc.b ObjID_Tornado
 	dc.b $5C
-; seems unused
-	dc.w objoff_3E
-	dc.b ObjID_Tornado
-	dc.b $5A
 ; off_3AFC8:
 ObjB2_SubObjData:
 	subObjData ObjB2_MapUnc_3AFF2,make_art_tile(ArtTile_ArtNem_Tornado,0,1),4,4,$60,0
@@ -80878,37 +80403,6 @@ ObjBA_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBA_MapUnc_3BB70:	BINCLUDE "mappings/sprite/objBA.bin"
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object BB - Removed object (unknown, unused)
-; ----------------------------------------------------------------------------
-; Sprite_3BB7C:
-ObjBB:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	ObjBB_Index(pc,d0.w),d1
-	jmp	ObjBB_Index(pc,d1.w)
-; ===========================================================================
-; off_3BB8A:
-ObjBB_Index:	offsetTable
-		offsetTableEntry.w ObjBB_Init	; 0
-		offsetTableEntry.w ObjBB_Main	; 2
-; ===========================================================================
-; BranchTo8_LoadSubObject
-ObjBB_Init:
-	bra.w	LoadSubObject
-; ===========================================================================
-; BranchTo15_JmpTo39_MarkObjGone
-ObjBB_Main:
-	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
-; ===========================================================================
-; off_3BB96:
-ObjBB_SubObjData:
-	subObjData ObjBB_MapUnc_3BBA0,make_art_tile(ArtTile_ArtNem_Unknown,1,0),4,4,$C,9
-; ----------------------------------------------------------------------------
-; sprite mappings
-; ----------------------------------------------------------------------------
-ObjBB_MapUnc_3BBA0:	BINCLUDE "mappings/sprite/objBB.bin"
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BC - Fire coming out of Robotnik's ship in WFZ
@@ -82470,15 +81964,6 @@ ObjC5_RobotnikPlatform:	; Just displays the platform and move accordingly to the
 	move.w	d0,y_pos(a0)
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
-	; some unused/dead code, At one point it appears a section of the platform was solid
-	move.w	x_pos(a0),-(sp)
-	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
-	move.w	#$F,d1
-	move.w	#8,d2
-	move.w	#8,d3
-	move.w	(sp)+,d4
-	jmpto	(PlatformObject).l, JmpTo9_PlatformObject
-; ===========================================================================
 
 ObjC5_HandleHits:
 	tst.b	collision_property(a0)
@@ -82993,9 +82478,6 @@ loc_3D3A4:
 	clr.b	jumping(a1)
 	move.w	#SndID_Bumper,d0
 	jsr	(PlaySound).l
-	rts
-; ===========================================================================
-	; unused
 	rts
 ; ===========================================================================
 
@@ -85217,18 +84699,6 @@ Scale_2x_RightPixels2:
 	rts
 ; ===========================================================================
 
-	; this data seems to be unused
-	dc.b $12,$34,$56,$78
-	dc.b $12,$34,$56,$78	; 4
-	dc.b $12,$34,$56,$78	; 8
-	dc.b $12,$34,$56,$78	; 12
-	dc.b $12,$34,$56,$78	; 16
-	dc.b $12,$34,$56,$78	; 20
-	dc.b $12,$34,$56,$78	; 24
-	dc.b $12,$34,$56,$78	; 28
-
-; ===========================================================================
-
     if ~~removeJmpTos
 JmpTo5_DisplaySprite3 ; JmpTo
 	jmp	(DisplaySprite3).l
@@ -85280,74 +84750,6 @@ JmpTo26_ObjectMove ; JmpTo
 
 	align 4
     endif
-
-
-
-
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 8A - Sonic Team Presents/Credits (leftover from S1) (seemingly unused)
-; ----------------------------------------------------------------------------
-; Sprite_3EAC8:
-Obj8A: ; (screen-space obj)
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj8A_Index(pc,d0.w),d1
-	jmp	Obj8A_Index(pc,d1.w)
-; ===========================================================================
-; off_3EAD6:
-Obj8A_Index:	offsetTable
-		offsetTableEntry.w Obj8A_Init
-		offsetTableEntry.w Obj8A_Display
-; ===========================================================================
-; loc_3EADA:
-Obj8A_Init:
-	addq.b	#2,routine(a0)
-	move.w	#$120,x_pixel(a0)
-	move.w	#$F0,y_pixel(a0)
-	move.l	#Obj8A_MapUnc_3EB4E,mappings(a0)
-	move.w	#make_art_tile($05A0,0,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo65_Adjust2PArtPointer
-	move.w	(Ending_demo_number).w,d0
-	move.b	d0,mapping_frame(a0)
-	move.b	#0,render_flags(a0)
-	move.b	#0,priority(a0)
-	cmpi.b	#GameModeID_TitleScreen,(Game_Mode).w	; title screen??
-	bne.s	Obj8A_Display	; if not, branch
-	move.w	#make_art_tile($0300,0,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo65_Adjust2PArtPointer
-	move.b	#$A,mapping_frame(a0)
-	tst.b	(S1_hidden_credits_flag).w
-	beq.s	Obj8A_Display
-	cmpi.b	#button_down_mask|button_B_mask|button_C_mask|button_A_mask,(Ctrl_1_Held).w
-	bne.s	Obj8A_Display
-	move.w	#$EEE,(Target_palette_line3).w
-	move.w	#$880,(Target_palette_line3+2).w
-	jmp	(DeleteObject).l
-; ===========================================================================
-; JmpTo46_DisplaySprite
-Obj8A_Display:
-	jmp	(DisplaySprite).l
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; sprite mappings (unused?)
-; ----------------------------------------------------------------------------
-Obj8A_MapUnc_3EB4E:	BINCLUDE "mappings/sprite/obj8A.bin"
-; ===========================================================================
-
-    if gameRevision<2
-	nop
-    endif
-
-    if ~~removeJmpTos
-JmpTo65_Adjust2PArtPointer ; JmpTo
-	jmp	(Adjust2PArtPointer).l
-
-	align 4
-    endif
-
-
-
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
