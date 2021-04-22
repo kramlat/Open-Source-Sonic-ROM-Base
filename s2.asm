@@ -30445,7 +30445,7 @@ ObjPtr_Flipper:		dc.l Obj86	; Flipper from CNZ
 ObjPtr_SSNumberOfRings:	dc.l Obj87	; Number of rings in Special Stage
 ObjPtr_SSTailsTails:	dc.l Obj88	; Tails' tails in Special Stage
 ObjPtr_ARZBoss:		dc.l Obj89	; ARZ boss
-			dc.l ObjNull	; 
+			dc.l Obj8A	; Crabmeat
 ObjPtr_WFZPalSwitcher:	dc.l Obj8B	; Cycling palette switcher from Wing Fortress Zone
 ObjPtr_Whisp:		dc.l Obj8C	; Whisp (blowfly badnik) from ARZ
 ObjPtr_GrounderInWall:	dc.l Obj8D	; Grounder in wall, from ARZ
@@ -35935,10 +35935,255 @@ loc_19F4C:
 	moveq	#0,d4
 	rts
 
+;=============================================================================== 
+; Object ??? - Unknow Object 0x00A8F0  (Sonic 1 Object 1F - GHZ Crabmeat)
+; [ Begin ]
+;===============================================================================          
+Obj8A: ; Unknow_Obj00A8F0: ; loc2b_A8F0:
+		moveq	#0,d0
+		move.b	routine(a0),d0
+		move.w	Crab_Index(pc,d0.w),d1
+		jmp	Crab_Index(pc,d1.w)
+; ===========================================================================
+Crab_Index:
+ptr_Crab_Main:		dc.w Crab_Main-Crab_Index
+ptr_Crab_Action:	dc.w Crab_Action-Crab_Index
+ptr_Crab_Delete:	dc.w Crab_Delete-Crab_Index
+ptr_Crab_BallMain:	dc.w Crab_BallMain-Crab_Index
+ptr_Crab_BallMove:	dc.w Crab_BallMove-Crab_Index
 
+id_Crab_Main = ptr_Crab_Main-Crab_Index	; 0
+id_Crab_Action = ptr_Crab_Action-Crab_Index	; 2
+id_Crab_Delete = ptr_Crab_Delete-Crab_Index	; 4
+id_Crab_BallMain = ptr_Crab_BallMain-Crab_Index	; 6
+id_Crab_BallMove = ptr_Crab_BallMove-Crab_Index	; 8
 
+crab_timedelay = $30
+crab_mode = $32
+; ===========================================================================
+Crab_Main:	; Routine 0
+		move.b	#$10,y_radius(a0)
+		move.b	#8,x_radius(a0)
+		move.l	#Map_Crab,mappings(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_Crabmeat,0,0),art_tile(a0)
+		bsr.w	Adjust2PArtPointer
+		move.b	#4,render_flags(a0)
+		move.b	#3,priority(a0)
+		move.b	#6,collision_flags(a0)
+		move.b	#$15,width_pixels(a0)
+		bsr.w	ObjectMoveAndFall
+		jsr	(ObjCheckFloorDist).l	; find floor
+		tst.w	d1
+		bpl.s	.floornotfound
+		add.w	d1,y_pos(a0)
+		move.b	d3,angle(a0)
+		move.w	#0,y_vel(a0)
+		addq.b	#2,routine(a0)
+
+.floornotfound:
+		rts	
+; ===========================================================================
 
 ; ===========================================================================
+
+Crab_Action:	; Routine 2
+		moveq	#0,d0
+		move.b	routine_secondary(a0),d0
+		move.w	.index(pc,d0.w),d1
+		jsr	.index(pc,d1.w)
+		lea	(Ani_Crab).l,a1
+		bsr.w	AnimateSprite
+		bra.w	MarkObjGone
+; ===========================================================================
+.index:		dc.w .waittofire-.index
+		dc.w .walkonfloor-.index
+; ===========================================================================
+
+.waittofire:
+		subq.w	#1,crab_timedelay(a0) ; subtract 1 from time delay
+		bpl.s	.dontmove
+		tst.b	render_flags(a0)
+		bpl.s	.movecrab
+		bchg	#1,crab_mode(a0)
+		bne.s	.fire
+
+.movecrab:
+		addq.b	#2,routine_secondary(a0)
+		move.w	#127,crab_timedelay(a0) ; set time delay to approx 2 seconds
+		move.w	#$80,x_vel(a0)	; move Crabmeat	to the right
+		bsr.w	Crab_SetAni
+		addq.b	#3,d0
+		move.b	d0,anim(a0)
+		bchg	#0,status(a0)
+		bne.s	.noflip
+		neg.w	x_vel(a0)	; change direction
+
+.dontmove:
+.noflip:
+		rts	
+; ===========================================================================
+.fire:
+		move.w	#59,crab_timedelay(a0)
+		move.b	#6,anim(a0)	; use firing animation
+		bsr.w	SingleObjLoad
+		bne.s	.failleft
+		_move.b	#$8A,0(a1) ; load left fireball
+		move.b	#id_Crab_BallMain,routine(a1)
+		move.w	x_pos(a0),x_pos(a1)
+		subi.w	#$10,x_pos(a1)
+		move.w	y_pos(a0),y_pos(a1)
+		move.w	#-$100,x_vel(a1)
+
+.failleft:
+		bsr.w	SingleObjLoad
+		bne.s	.failright
+		_move.b	#$8A,0(a1) ; load right fireball
+		move.b	#id_Crab_BallMain,routine(a1)
+		move.w	x_pos(a0),x_pos(a1)
+		addi.w	#$10,x_pos(a1)
+		move.w	y_pos(a0),y_pos(a1)
+		move.w	#$100,x_vel(a1)
+
+.failright:
+		rts	
+; ===========================================================================
+
+.walkonfloor:
+		subq.w	#1,crab_timedelay(a0)
+		bmi.s	loc_966E
+		bsr.w	ObjectMove
+		bchg	#0,crab_mode(a0)
+		bne.s	loc_9654
+		move.w	x_pos(a0),d3
+		addi.w	#$10,d3
+		btst	#0,status(a0)
+		beq.s	loc_9640
+		subi.w	#$20,d3
+
+loc_9640:
+		jsr	(ObjCheckFloorDist2).l
+		cmpi.w	#-8,d1
+		blt.s	loc_966E
+		cmpi.w	#$C,d1
+		bge.s	loc_966E
+		rts	
+; ===========================================================================
+
+loc_9654:
+		jsr	(ObjCheckFloorDist).l
+		add.w	d1,y_pos(a0)
+		move.b	d3,angle(a0)
+		bsr.w	Crab_SetAni
+		addq.b	#3,d0
+		move.b	d0,anim(a0)
+		rts	
+; ===========================================================================
+
+loc_966E:
+		subq.b	#2,routine_secondary(a0)
+		move.w	#59,crab_timedelay(a0)
+		move.w	#0,x_vel(a0)
+		bsr.w	Crab_SetAni
+		move.b	d0,anim(a0)
+		rts	
+; ---------------------------------------------------------------------------
+; Subroutine to	set the	correct	animation for a	Crabmeat
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+Crab_SetAni:
+		moveq	#0,d0
+		move.b	angle(a0),d3
+		bmi.s	loc_96A4
+		cmpi.b	#6,d3
+		bcs.s	locret_96A2
+		moveq	#1,d0
+		btst	#0,status(a0)
+		bne.s	locret_96A2
+		moveq	#2,d0
+
+locret_96A2:
+		rts	
+; ===========================================================================
+
+loc_96A4:
+		cmpi.b	#-6,d3
+		bhi.s	locret_96B6
+		moveq	#2,d0
+		btst	#0,status(a0)
+		bne.s	locret_96B6
+		moveq	#1,d0
+
+locret_96B6:
+		rts	
+; End of function Crab_SetAni
+
+; ===========================================================================
+
+Crab_Delete:	; Routine 4
+		bsr.w	DeleteObject
+		rts	
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Sub-object - missile that the	Crabmeat throws
+; ---------------------------------------------------------------------------
+
+Crab_BallMain:	; Routine 6
+		addq.b	#2,routine(a0)
+		move.l	#Map_Crab,mappings(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_Crabmeat,0,0),art_tile(a0)
+		move.b	#4,render_flags(a0)
+		move.b	#3,priority(a0)
+		move.b	#$87,collision_flags(a0)
+		move.b	#8,width_pixels(a0)
+		move.w	#-$400,y_vel(a0)
+		move.b	#7,anim(a0)
+
+Crab_BallMove:	; Routine 8
+		lea	(Ani_Crab).l,a1
+		bsr.w	AnimateSprite
+		bsr.w	ObjectMoveAndFall
+		bsr.w	DisplaySprite
+		move.w	(Camera_Max_Y_pos).w,d0
+		addi.w	#$E0,d0
+		cmp.w	y_pos(a0),d0	; has object moved below the level boundary?
+		bcs.s	.delete		; if yes, branch
+		rts	
+
+.delete:
+		bra.w	DeleteObject
+Ani_Crab:
+        dc.w    loc2b_AB2C-Ani_Crab
+        dc.w    loc2b_AB2F-Ani_Crab
+        dc.w    loc2b_AB32-Ani_Crab
+        dc.w    loc2b_AB35-Ani_Crab
+        dc.w    loc2b_AB3A-Ani_Crab
+        dc.w    loc2b_AB3F-Ani_Crab
+        dc.w    loc2b_AB44-Ani_Crab
+        dc.w    loc2b_AB47-Ani_Crab
+loc2b_AB2C:
+        dc.b    $F, $00, $FF
+loc2b_AB2F:
+        dc.b    $F, $2, $FF
+loc2b_AB32:
+        dc.b    $F, $2, $FF
+loc2b_AB35:
+        dc.b    $F, $1, $1, $00, $FF
+loc2b_AB3A:
+        dc.b    $F, $1, $3, $2, $FF
+loc2b_AB3F:
+        dc.b    $F, $1, $3, $2, $FF
+loc2b_AB44:
+        dc.b    $F, $4, $FF
+loc2b_AB47:
+        dc.b    $1, $5, $6, $FF, $00     
+Map_Crab: BINCLUDE "mappings/sprite/Crabmeat.bin"                   
+;=============================================================================== 
+; Object ??? - Unknow Object 0x00A8F0
+; [ End ]
+;===============================================================================          
 ; ----------------------------------------------------------------------------
 ; Object 01 - Sonic
 ; ----------------------------------------------------------------------------
@@ -43631,6 +43876,7 @@ return_1EDF8:
 ; loc_1EDFA: ObjHitFloor:
 ObjCheckFloorDist:
 	move.w	x_pos(a0),d3
+ObjCheckFloorDist2:
 	move.w	y_pos(a0),d2
 	move.b	y_radius(a0),d0
 	ext.w	d0
@@ -46880,7 +47126,7 @@ Obj14_UpdateMappingAndCollision:
 	move.b	width_pixels(a0),d1
 	moveq	#8,d3
 	move.w	(sp)+,d4
-	bra.w	SlopedPlatform
+	jmp	SlopedPlatform
 ; ===========================================================================
 
 return_21A74:
@@ -72763,93 +73009,165 @@ LoadSubObject_Part3:
 
 ; off_36628:
 SubObjData_Index: offsetTable
-	offsetTableEntry.w Obj8C_SubObjData	; $0
+	offsetTableEntry.w Obj8C_SubObjData	; $1
 	offsetTableEntry.w Obj8D_SubObjData	; $2
-	offsetTableEntry.w Obj90_SubObjData	; $4
-	offsetTableEntry.w Obj90_SubObjData2	; $6
-	offsetTableEntry.w Obj91_SubObjData	; $8
-	offsetTableEntry.w Obj92_SubObjData	; $A
-	offsetTableEntry.w Invalid_SubObjData	; $C
-	offsetTableEntry.w Obj94_SubObjData	; $E
-	offsetTableEntry.w Obj94_SubObjData2	; $10
-	offsetTableEntry.w Obj99_SubObjData2	; $12
-	offsetTableEntry.w Obj99_SubObjData	; $14
-	offsetTableEntry.w Obj9A_SubObjData	; $16
-	offsetTableEntry.w Obj9B_SubObjData	; $18
-	offsetTableEntry.w Obj9C_SubObjData	; $1A
-	offsetTableEntry.w Obj9A_SubObjData2	; $1C
-	offsetTableEntry.w Obj9D_SubObjData	; $1E
-	offsetTableEntry.w Obj9D_SubObjData2	; $20
-	offsetTableEntry.w Obj9E_SubObjData	; $22
-	offsetTableEntry.w Obj9F_SubObjData	; $24
-	offsetTableEntry.w ObjA0_SubObjData	; $26
-	offsetTableEntry.w ObjA1_SubObjData	; $28
-	offsetTableEntry.w ObjA2_SubObjData	; $2A
-	offsetTableEntry.w ObjA3_SubObjData	; $2C
-	offsetTableEntry.w ObjA4_SubObjData	; $2E
-	offsetTableEntry.w ObjA4_SubObjData2	; $30
-	offsetTableEntry.w ObjA5_SubObjData	; $32
-	offsetTableEntry.w ObjA6_SubObjData	; $34
-	offsetTableEntry.w ObjA7_SubObjData	; $36
-	offsetTableEntry.w ObjA7_SubObjData2	; $38
-	offsetTableEntry.w ObjA8_SubObjData	; $3A
-	offsetTableEntry.w ObjA8_SubObjData2	; $3C
-	offsetTableEntry.w ObjA7_SubObjData3	; $3E
-	offsetTableEntry.w ObjAC_SubObjData	; $40
-	offsetTableEntry.w ObjAD_SubObjData	; $42
-	offsetTableEntry.w ObjAD_SubObjData2	; $44
-	offsetTableEntry.w ObjAD_SubObjData3	; $46
-	offsetTableEntry.w ObjAF_SubObjData2	; $48
-	offsetTableEntry.w ObjAF_SubObjData	; $4A
-	offsetTableEntry.w ObjB0_SubObjData	; $4C
-	offsetTableEntry.w ObjB1_SubObjData	; $4E
-	offsetTableEntry.w ObjB2_SubObjData	; $50
-	offsetTableEntry.w ObjB2_SubObjData	; $52
-	offsetTableEntry.w ObjB2_SubObjData	; $54
-	offsetTableEntry.w ObjBC_SubObjData2	; $56
-	offsetTableEntry.w ObjBC_SubObjData2	; $58
-	offsetTableEntry.w ObjB3_SubObjData	; $5A
-	offsetTableEntry.w ObjB2_SubObjData2	; $5C
-	offsetTableEntry.w ObjB3_SubObjData	; $5E
-	offsetTableEntry.w ObjB3_SubObjData	; $60
-	offsetTableEntry.w ObjB3_SubObjData	; $62
-	offsetTableEntry.w ObjB4_SubObjData	; $64
-	offsetTableEntry.w ObjB5_SubObjData	; $66
-	offsetTableEntry.w ObjB5_SubObjData	; $68
-	offsetTableEntry.w ObjB6_SubObjData	; $6A
-	offsetTableEntry.w ObjB6_SubObjData	; $6C
-	offsetTableEntry.w ObjB6_SubObjData	; $6E
-	offsetTableEntry.w ObjB6_SubObjData	; $70
-	offsetTableEntry.w ObjB7_SubObjData	; $72
-	offsetTableEntry.w ObjB8_SubObjData	; $74
-	offsetTableEntry.w ObjB9_SubObjData	; $76
-	offsetTableEntry.w ObjBA_SubObjData	; $78
-	offsetTableEntry.w Invalid_SubObjData2	; $7A
-	offsetTableEntry.w ObjBC_SubObjData2	; $7C
-	offsetTableEntry.w ObjBD_SubObjData	; $7E
-	offsetTableEntry.w ObjBD_SubObjData	; $80
-	offsetTableEntry.w ObjBE_SubObjData	; $82
-	offsetTableEntry.w ObjBE_SubObjData2	; $84
-	offsetTableEntry.w ObjC0_SubObjData	; $86
-	offsetTableEntry.w ObjC1_SubObjData	; $88
-	offsetTableEntry.w ObjC2_SubObjData	; $8A
-	offsetTableEntry.w Invalid_SubObjData2	; $8C
-	offsetTableEntry.w ObjB8_SubObjData2	; $8E
-	offsetTableEntry.w ObjC3_SubObjData	; $90
-	offsetTableEntry.w ObjC5_SubObjData	; $92
-	offsetTableEntry.w ObjC5_SubObjData2	; $94
-	offsetTableEntry.w ObjC5_SubObjData3	; $96
-	offsetTableEntry.w ObjC5_SubObjData3	; $98
-	offsetTableEntry.w ObjC5_SubObjData3	; $9A
-	offsetTableEntry.w ObjC5_SubObjData3	; $9C
-	offsetTableEntry.w ObjC5_SubObjData3	; $9E
-	offsetTableEntry.w ObjC6_SubObjData2	; $A0
-	offsetTableEntry.w ObjC5_SubObjData4	; $A2
-	offsetTableEntry.w ObjAF_SubObjData3	; $A4
-	offsetTableEntry.w ObjC6_SubObjData3	; $A6
-	offsetTableEntry.w ObjC6_SubObjData4	; $A8
-	offsetTableEntry.w ObjC6_SubObjData	; $AA
-	offsetTableEntry.w ObjC8_SubObjData	; $AC
+	offsetTableEntry.w Obj90_SubObjData	; $3
+	offsetTableEntry.w Obj90_SubObjData2; $4
+	offsetTableEntry.w Obj91_SubObjData	; $5
+	offsetTableEntry.w Obj92_SubObjData	; $6
+	offsetTableEntry.w Invalid_SubObjData; $7
+	offsetTableEntry.w Obj94_SubObjData	; $8
+	offsetTableEntry.w Obj94_SubObjData2	; $9
+	offsetTableEntry.w Obj99_SubObjData2	; $A
+	offsetTableEntry.w Obj99_SubObjData	; $B
+	offsetTableEntry.w Obj9A_SubObjData	; $C
+	offsetTableEntry.w Obj9B_SubObjData	; $D
+	offsetTableEntry.w Obj9C_SubObjData	; $E
+	offsetTableEntry.w Obj9A_SubObjData2	; $F
+	offsetTableEntry.w Obj9D_SubObjData	; $10
+	offsetTableEntry.w Obj9D_SubObjData2	; $11
+	offsetTableEntry.w Obj9E_SubObjData	; $12
+	offsetTableEntry.w Obj9F_SubObjData	; $13
+	offsetTableEntry.w ObjA0_SubObjData	; $14
+	offsetTableEntry.w ObjA1_SubObjData	; $15
+	offsetTableEntry.w ObjA2_SubObjData	; $16
+	offsetTableEntry.w ObjA3_SubObjData	; $17
+	offsetTableEntry.w ObjA4_SubObjData	; $18
+	offsetTableEntry.w ObjA4_SubObjData2	; $19
+	offsetTableEntry.w ObjA5_SubObjData	; $1A
+	offsetTableEntry.w ObjA6_SubObjData	; $1B
+	offsetTableEntry.w ObjA7_SubObjData	; $1C
+	offsetTableEntry.w ObjA7_SubObjData2	; $1D
+	offsetTableEntry.w ObjA8_SubObjData	; $1E
+	offsetTableEntry.w ObjA8_SubObjData2	; $1F
+	offsetTableEntry.w ObjA7_SubObjData3	; $20
+	offsetTableEntry.w ObjAC_SubObjData	; $21
+	offsetTableEntry.w ObjAD_SubObjData	; $22
+	offsetTableEntry.w ObjAD_SubObjData2	; $23
+	offsetTableEntry.w ObjAD_SubObjData3	; $24
+	offsetTableEntry.w ObjAF_SubObjData2	; $25
+	offsetTableEntry.w ObjAF_SubObjData	; $26
+	offsetTableEntry.w ObjB0_SubObjData	; $27
+	offsetTableEntry.w ObjB1_SubObjData	; $28
+	offsetTableEntry.w ObjB2_SubObjData	; $29
+	offsetTableEntry.w ObjB2_SubObjData	; $2A
+	offsetTableEntry.w ObjB2_SubObjData	; $2B
+	offsetTableEntry.w ObjBC_SubObjData2	; $2C
+	offsetTableEntry.w ObjBC_SubObjData2	; $2D
+	offsetTableEntry.w ObjB3_SubObjData	; $2E
+	offsetTableEntry.w ObjB2_SubObjData2	; $2F
+	offsetTableEntry.w ObjB3_SubObjData	; $30
+	offsetTableEntry.w ObjB3_SubObjData	; $31
+	offsetTableEntry.w ObjB3_SubObjData	; $32
+	offsetTableEntry.w ObjB4_SubObjData	; $33
+	offsetTableEntry.w ObjB5_SubObjData	; $34
+	offsetTableEntry.w ObjB5_SubObjData	; $35
+	offsetTableEntry.w ObjB6_SubObjData	; $36
+	offsetTableEntry.w ObjB6_SubObjData	; $37
+	offsetTableEntry.w ObjB6_SubObjData	; $38
+	offsetTableEntry.w ObjB6_SubObjData	; $39
+	offsetTableEntry.w ObjB7_SubObjData	; $3A
+	offsetTableEntry.w ObjB8_SubObjData	; $3B
+	offsetTableEntry.w ObjB9_SubObjData	; $3C
+	offsetTableEntry.w ObjBA_SubObjData	; $3D
+	offsetTableEntry.w Invalid_SubObjData2	; $3E
+	offsetTableEntry.w ObjBC_SubObjData2	; $3F
+	offsetTableEntry.w ObjBD_SubObjData	; $40
+	offsetTableEntry.w ObjBD_SubObjData	; $41
+	offsetTableEntry.w ObjBE_SubObjData	; $42
+	offsetTableEntry.w ObjBE_SubObjData2	; $43
+	offsetTableEntry.w ObjC0_SubObjData	; $44
+	offsetTableEntry.w ObjC1_SubObjData	; $45
+	offsetTableEntry.w ObjC2_SubObjData	; $46
+	offsetTableEntry.w Invalid_SubObjData2	; $47
+	offsetTableEntry.w ObjB8_SubObjData2	; $48
+	offsetTableEntry.w ObjC3_SubObjData	; $49
+	offsetTableEntry.w ObjC5_SubObjData	; $4A
+	offsetTableEntry.w ObjC5_SubObjData2	; $4B
+	offsetTableEntry.w ObjC5_SubObjData3	; $4C
+	offsetTableEntry.w ObjC5_SubObjData3	; $4D
+	offsetTableEntry.w ObjC5_SubObjData3	; $4E
+	offsetTableEntry.w ObjC5_SubObjData3	; $4F
+	offsetTableEntry.w ObjC5_SubObjData3	; $50
+	offsetTableEntry.w ObjC6_SubObjData2	; $51
+	offsetTableEntry.w ObjC5_SubObjData4	; $52
+	offsetTableEntry.w ObjAF_SubObjData3	; $53
+	offsetTableEntry.w ObjC6_SubObjData3	; $54
+	offsetTableEntry.w ObjC6_SubObjData4	; $55
+	offsetTableEntry.w ObjC6_SubObjData	; $56
+	offsetTableEntry.w ObjC8_SubObjData	; $57
+	offsetTableEntry.w ObjC8_SubObjData	; $58
+	offsetTableEntry.w ObjC8_SubObjData	; $59
+	offsetTableEntry.w ObjC8_SubObjData	; $5A
+	offsetTableEntry.w ObjC8_SubObjData	; $5B
+	offsetTableEntry.w ObjC8_SubObjData	; $5C
+	offsetTableEntry.w ObjC8_SubObjData	; $5D
+	offsetTableEntry.w ObjC8_SubObjData	; $5E
+	offsetTableEntry.w ObjC8_SubObjData	; $5F
+	offsetTableEntry.w ObjC8_SubObjData	; $60
+	offsetTableEntry.w ObjC8_SubObjData	; $61
+	offsetTableEntry.w ObjC8_SubObjData	; $62
+	offsetTableEntry.w ObjC8_SubObjData	; $63
+	offsetTableEntry.w ObjC8_SubObjData	; $64
+	offsetTableEntry.w ObjC8_SubObjData	; $65
+	offsetTableEntry.w ObjC8_SubObjData	; $66
+	offsetTableEntry.w ObjC8_SubObjData	; $67
+	offsetTableEntry.w ObjC8_SubObjData	; $68
+	offsetTableEntry.w ObjC8_SubObjData	; $69
+	offsetTableEntry.w ObjC8_SubObjData	; $6A
+	offsetTableEntry.w ObjC8_SubObjData	; $6B
+	offsetTableEntry.w ObjC8_SubObjData	; $6C
+	offsetTableEntry.w ObjC8_SubObjData	; $6D
+	offsetTableEntry.w ObjC8_SubObjData	; $6E
+	offsetTableEntry.w ObjC8_SubObjData	; $6F
+	offsetTableEntry.w ObjC8_SubObjData	; $70
+	offsetTableEntry.w ObjC8_SubObjData	; $71
+	offsetTableEntry.w ObjC8_SubObjData	; $72
+	offsetTableEntry.w ObjC8_SubObjData	; $73
+	offsetTableEntry.w ObjC8_SubObjData	; $74
+	offsetTableEntry.w ObjC8_SubObjData	; $75
+	offsetTableEntry.w ObjC8_SubObjData	; $76
+	offsetTableEntry.w ObjC8_SubObjData	; $77
+	offsetTableEntry.w ObjC8_SubObjData	; $78
+	offsetTableEntry.w ObjC8_SubObjData	; $79
+	offsetTableEntry.w ObjC8_SubObjData	; $7A
+	offsetTableEntry.w ObjC8_SubObjData	; $7B
+	offsetTableEntry.w ObjC8_SubObjData	; $7C
+	offsetTableEntry.w ObjC8_SubObjData	; $7D
+	offsetTableEntry.w ObjC8_SubObjData	; $7E
+	offsetTableEntry.w ObjC8_SubObjData	; $7F
+	offsetTableEntry.w ObjC8_SubObjData	; $80
+	offsetTableEntry.w ObjC8_SubObjData	; $81
+	offsetTableEntry.w ObjC8_SubObjData	; $82
+	offsetTableEntry.w ObjC8_SubObjData	; $83
+	offsetTableEntry.w ObjC8_SubObjData	; $84
+	offsetTableEntry.w ObjC8_SubObjData	; $85
+	offsetTableEntry.w ObjC8_SubObjData	; $86
+	offsetTableEntry.w ObjC8_SubObjData	; $87
+	offsetTableEntry.w ObjC8_SubObjData	; $88
+	offsetTableEntry.w ObjC8_SubObjData	; $89
+	offsetTableEntry.w ObjC8_SubObjData	; $8A
+	offsetTableEntry.w ObjC8_SubObjData	; $8B
+	offsetTableEntry.w ObjC8_SubObjData	; $8C
+	offsetTableEntry.w ObjC8_SubObjData	; $8D
+	offsetTableEntry.w ObjC8_SubObjData	; $8E
+	offsetTableEntry.w ObjC8_SubObjData	; $8F
+	offsetTableEntry.w ObjC8_SubObjData	; $90
+	offsetTableEntry.w ObjC8_SubObjData	; $91
+	offsetTableEntry.w ObjC8_SubObjData	; $92
+	offsetTableEntry.w ObjC8_SubObjData	; $93
+	offsetTableEntry.w ObjC8_SubObjData	; $94
+	offsetTableEntry.w ObjC8_SubObjData	; $95
+	offsetTableEntry.w ObjC8_SubObjData	; $96
+	offsetTableEntry.w ObjC8_SubObjData	; $97
+	offsetTableEntry.w ObjC8_SubObjData	; $98
+	offsetTableEntry.w ObjC8_SubObjData	; $99
+	offsetTableEntry.w ObjC8_SubObjData	; $9A
+	offsetTableEntry.w ObjC8_SubObjData	; $9B
+	offsetTableEntry.w ObjC8_SubObjData	; $9C
+	offsetTableEntry.w ObjC8_SubObjData	; $9D
+	offsetTableEntry.w ObjC8_SubObjData	; $9E
+	offsetTableEntry.w ObjC8_SubObjData	; $9F
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Get Orientation To Player
