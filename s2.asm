@@ -9619,6 +9619,7 @@ SSTrack_ApplyVscroll:
 
 
 ; sub_6F8E:
+
 SSSingleObjLoad:
 	lea	(SS_Dynamic_Object_RAM).w,a1
 	move.w	#(SS_Dynamic_Object_RAM_End-SS_Dynamic_Object_RAM)/object_size-1,d5
@@ -23650,8 +23651,12 @@ Obj18_Init:
 	move.b	(a2)+,mapping_frame(a0)
 	move.l	#Obj18_MapUnc_107F6,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
-	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w
-	bne.s	+
+	cmpi.b	#emerald_hill_zone,(Current_Zone).w
+	beq.s	+
+	move.l	#Map_Plat_GHZ,mappings(a0)
+	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
+	cmpi.b	#$11,(Current_Zone).w
+	beq.s	+
 	move.l	#Obj18_MapUnc_1084E,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
 +
@@ -23979,6 +23984,10 @@ loc_107EE:
 	move.b	(Oscillating_Data+$18).w,angle(a0)
 	rts
 ; ===========================================================================
+; -------------------------------------------------------------------------------
+; sprite mappings
+; -------------------------------------------------------------------------------
+Map_Plat_GHZ:		BINCLUDE "mappings/sprite/Platforms (GHZ).bin"
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
@@ -30297,7 +30306,7 @@ ObjPtr_Splash:		dc.l Obj08	; Water splash in Aquatic Ruin Zone, Spindash dust
 ObjPtr_SonicSS:		dc.l Obj09	; Sonic in Special Stage
 ObjPtr_SmallBubbles:	dc.l Obj0A	; Small bubbles from Sonic's face while underwater
 ObjPtr_TippingFloor:	dc.l Obj0B	; Section of pipe that tips you off from CPZ
-			dc.l ObjNull	; Small floating platform
+			dc.l Obj0C	; Buzz Bomber
 ObjPtr_Signpost:	dc.l Obj0D	; End of level signpost
 ObjPtr_IntroStars:	dc.l Obj0E	; Flashing stars from intro
 ObjPtr_TitleMenu:	dc.l Obj0F	; Title screen menu
@@ -30362,7 +30371,7 @@ ObjPtr_SteamSpring:	dc.l Obj42	; Steam Spring from MTZ
 ObjPtr_SlidingSpike:	dc.l Obj43	; Sliding spike obstacle thing from OOZ
 ObjPtr_RoundBumper:	dc.l Obj44	; Round bumper from Casino Night Zone
 ObjPtr_OOZSpring:	dc.l Obj45	; Pressure spring from OOZ
-		dc.l ObjNull
+		dc.l Obj46	; Buzz Bomber projectile
 ObjPtr_Button:		dc.l Obj47	; Button
 ObjPtr_LauncherBall:	dc.l Obj48	; Round ball thing from OOZ that fires you off in a different direction
 ObjPtr_EHZWaterfall:	dc.l Obj49	; Waterfall from EHZ
@@ -31820,6 +31829,7 @@ BuildSprites_P2_MultiDraw_NextObj:
 
 ; adjust art pointer of object at a0 for 2-player mode
 ; sub_16D6E:
+; ModifySpriteAttr_2P
 Adjust2PArtPointer:
 	tst.w	(Two_player_mode).w
 	beq.s	+ ; rts
@@ -33753,6 +33763,7 @@ return_17FD8:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; loc_17FDA: ; allocObject:
+;SingleObjectLoad
 SingleObjLoad:
 	lea	(Dynamic_Object_RAM).w,a1 ; a1=object
 	move.w	#(Dynamic_Object_RAM_End-Dynamic_Object_RAM)/object_size-1,d0 ; search to end of table
@@ -50070,6 +50081,293 @@ JmpTo9_ObjectMove ; JmpTo
 	align 4
     endif
 
+;----------------------------------------------------
+; Object 0C - Buzzbomber
+;----------------------------------------------------
+
+Obj0C:					; DATA XREF: ROM:Obj_Indexo
+		moveq	#0,d0
+		move.b	routine(a0),d0
+		move.w	Obj0C_Index(pc,d0.w),d1
+		jmp	Obj0C_Index(pc,d1.w)
+; ===========================================================================
+Obj0C_Index:	dc.w Obj0C_Init-Obj0C_Index	; DATA XREF: ROM:Obj0C_Indexo
+		dc.w Obj0C_Main-Obj0C_Index
+		dc.w Obj0C_Delete-Obj0C_Index
+; ===========================================================================
+Obj0C_Init:				; DATA XREF: ROM:Obj0C_Indexo
+		addq.b	#2,routine(a0)
+		move.l	#Map_Obj0C,mappings(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_Buzz,0,0),art_tile(a0)
+		jsr	Adjust2PArtPointer
+		move.b	#4,render_flags(a0)
+		move.b	#3,priority(a0)
+		move.b	#8,collision_flags(a0)
+		move.b	#$18,width_pixels(a0)
+Obj0C_Main:				; DATA XREF: ROM:0000A418o
+		moveq	#0,d0
+		move.b	routine_secondary(a0),d0
+		move.w	off2b_A466(pc,d0.w),d1
+		jsr	off2b_A466(pc,d1.w)
+		lea	(Ani_Obj22).l,a1
+		jsr	AnimateSprite
+		jmp	MarkObjGone
+; ===========================================================================
+off2b_A466:	dc.w loc2b_A46A-off2b_A466	; DATA XREF: ROM:off2b_A466o
+		dc.w loc2b_A500-off2b_A466
+; ===========================================================================
+loc2b_A46A:				; DATA XREF: ROM:off2b_A466o
+		subq.w	#1,objoff_32(a0)
+		bpl.s	loc2bret_A49A
+		btst	#1,objoff_34(a0)
+		bne.s	loc2b_A49C
+		addq.b	#2,routine_secondary(a0)
+		move.w	#$7F,objoff_32(a0) ; ''
+		move.w	#$400,x_vel(a0)
+		move.b	#1,anim(a0)
+		btst	#0,status(a0)
+		bne.s	loc2bret_A49A
+		neg.w	x_vel(a0)
+
+loc2bret_A49A:				; CODE XREF: ROM:0000A46Ej
+					; ROM:0000A494j
+		rts
+; ===========================================================================
+
+loc2b_A49C:				; CODE XREF: ROM:0000A476j
+		jsr	SingleObjLoad
+		bne.s	loc2bret_A4FE
+		move.b	#$46,id(a1) ; '#'
+		move.w	x_pos(a0),x_pos(a1)
+		move.w	y_pos(a0),y_pos(a1)
+		addi.w	#$1C,y_pos(a1)
+		move.w	#$200,y_vel(a1)
+		move.w	#$200,x_vel(a1)
+		move.w	#$18,d0
+		btst	#0,status(a0)
+		bne.s	loc2b_A4D8
+		neg.w	d0
+		neg.w	x_vel(a1)
+loc2b_A4D8:				; CODE XREF: ROM:0000A4D0j
+		add.w	d0,x_pos(a1)
+		move.b	status(a0),status(a1)
+		move.w	#$E,objoff_32(a1)
+		move.l	a0,objoff_3C(a1)
+		move.b	#1,objoff_34(a0)
+		move.w	#$3B,objoff_32(a0) ; ';'
+		move.b	#2,anim(a0)
+
+loc2bret_A4FE:				; CODE XREF: ROM:0000A4A0j
+		rts
+; ===========================================================================
+loc2b_A500:				; DATA XREF: ROM:0000A468o
+		subq.w	#1,objoff_32(a0)
+		bmi.s	loc2b_A536
+		jsr	ObjectMove
+		tst.b	objoff_34(a0)
+		bne.s	loc2bret_A558
+		move.w	($FFFFB008).w,d0
+		sub.w	x_pos(a0),d0
+		bpl.s	loc2b_A51C
+		neg.w	d0
+
+loc2b_A51C:				; CODE XREF: ROM:0000A518j
+		cmpi.w	#$60,d0	; '`'
+		bcc.s	loc2bret_A558
+		tst.b	render_flags(a0)
+		bpl.s	loc2bret_A558
+		move.b	#2,objoff_34(a0)
+		move.w	#$1D,objoff_32(a0)
+		bra.s	loc2b_A548
+; ===========================================================================
+
+loc2b_A536:				; CODE XREF: ROM:0000A504j
+		move.b	#0,objoff_34(a0)
+		bchg	#0,status(a0)
+		move.w	#$3B,objoff_32(a0) ; ';'
+
+loc2b_A548:				; CODE XREF: ROM:0000A534j
+		subq.b	#2,routine_secondary(a0)
+		move.w	#0,x_vel(a0)
+		move.b	#0,anim(a0)
+
+loc2bret_A558:				; CODE XREF: ROM:0000A50Ej
+					; ROM:0000A520j ...
+		rts
+; ===========================================================================
+
+Obj0C_Delete:				; DATA XREF: ROM:0000A41Ao
+		jmp	DeleteObject
+; ===========================================================================
+
+;----------------------------------------------------
+; Object 46 - Missile that Buzzbomber throws
+;----------------------------------------------------
+
+Obj46:					; DATA XREF: ROM:Obj_Indexo
+		moveq	#0,d0
+		move.b	routine(a0),d0
+		move.w	Obj46_Index(pc,d0.w),d1
+		jmp	Obj46_Index(pc,d1.w)
+; ===========================================================================
+Obj46_Index:	dc.w Obj46_Init-Obj46_Index	; DATA XREF: ROM:Obj46_Indexo
+					; ROM:0000A56Eo ...
+		dc.w Obj46_Display-Obj46_Index
+		dc.w Obj46_Main-Obj46_Index
+		dc.w Obj46_RT6-Obj46_Index
+		dc.w Obj46_RT8-Obj46_Index
+; ===========================================================================
+
+Obj46_Init:				; DATA XREF: ROM:Obj46_Indexo
+		subq.w	#1,objoff_32(a0)
+		bpl.s	loc2b_A5DE
+		addq.b	#2,routine(a0)
+		move.l	#Map_Obj46,4(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_Buzz,1,0),2(a0)
+		jsr	Adjust2PArtPointer
+		move.b	#4,render_flags(a0)
+		move.b	#3,priority(a0)
+		move.b	#8,width_pixels(a0)
+		andi.b	#3,status(a0)
+		tst.b	objoff_28(a0)
+		beq.s	Obj46_Display
+		move.b	#8,routine(a0)
+		move.b	#$87,collision_flags(a0)
+		move.b	#1,anim(a0)
+		bra.w	loc2b_A63E
+; ===========================================================================
+
+Obj46_Display:				; CODE XREF: ROM:0000A5AEj
+					; DATA XREF: ROM:0000A56Eo
+		movea.l	objoff_3C(a0),a1
+		cmpi.b	#$27,id(a1) ; '''
+		beq.s	Obj46_RT6
+		lea	(Ani_Obj33).l,a1
+		jsr	AnimateSprite
+		jmp	DisplaySprite
+; ===========================================================================
+
+loc2b_A5DE:				; CODE XREF: ROM:0000A57Aj
+		movea.l	objoff_3C(a0),a1
+		cmpi.b	#$27,id(a1) ; '''
+		beq.s	Obj46_RT6
+		rts
+; ===========================================================================
+
+Obj46_Main:				; DATA XREF: ROM:0000A570o
+		btst	#7,status(a0)
+		bne.s	loc2b_A620
+		move.b	#$87,collision_flags(a0)
+		move.b	#1,anim(a0)
+		jsr	ObjectMove
+		lea	(Ani_Obj33).l,a1
+		jsr	AnimateSprite
+		move.w	($FFFFEECE).w,d0
+		addi.w	#$E0,d0	; 'à'
+		cmp.w	y_pos(a0),d0
+		bcs.s	Obj46_RT6
+		jmp	DisplaySprite
+; ===========================================================================
+
+loc2b_A620:				; CODE XREF: ROM:0000A5F2j
+		move.b	#ObjID_Explosion,0(a0) ; '$'
+		move.b	#0,routine(a0)
+		bra.w	Obj24
+; ===========================================================================
+
+Obj46_RT6:				; CODE XREF: ROM:0000A5CEj
+					; ROM:0000A5E8j ...
+		jmp	DeleteObject
+; ===========================================================================
+
+Obj46_RT8:				; DATA XREF: ROM:0000A574o
+		tst.b	render_flags(a0)
+		bpl.s	Obj46_RT6
+		jsr	ObjectMove
+
+loc2b_A63E:				; CODE XREF: ROM:0000A5C2j
+		lea	(Ani_Obj33).l,a1
+		jsr	AnimateSprite
+		jmp	DisplaySprite
+; ===========================================================================
+Ani_Obj22:	dc.w byte_A652-Ani_Obj22 ; DATA	XREF: ROM:0000A458o
+					; ROM:Ani_Obj22o ...
+		dc.w byte_A656-Ani_Obj22
+		dc.w byte_A65A-Ani_Obj22
+byte_A652:	dc.b   1,  0,  1,$FF	; 0 ; DATA XREF: ROM:Ani_Obj22o
+byte_A656:	dc.b   1,  2,  3,$FF	; 0 ; DATA XREF: ROM:0000A64Eo
+byte_A65A:	dc.b   1,  4,  5,$FF	; 0 ; DATA XREF: ROM:0000A650o
+Ani_Obj33:	dc.w byte_A662-Ani_Obj33 ; DATA	XREF: ROM:0000A5D0o
+					; ROM:0000A604o ...
+		dc.w byte_A666-Ani_Obj33
+byte_A662:	dc.b   7,  0,  1,$FC	; 0 ; DATA XREF: ROM:Ani_Obj33o
+byte_A666:	dc.b   1,  2,  3,$FF	; 0 ; DATA XREF: ROM:0000A660o
+Map_Obj0C:	dc.w word_A676-Map_Obj0C ; DATA	XREF: ROM:0000A420o
+					; ROM:Map_Obj0Co ...
+		dc.w word_A6A8-Map_Obj0C
+		dc.w word_A6DA-Map_Obj0C
+		dc.w word_A714-Map_Obj0C
+		dc.w word_A74E-Map_Obj0C
+		dc.w word_A780-Map_Obj0C
+word_A676:	dc.w 6			; DATA XREF: ROM:Map_Obj0Co
+		dc.w $F409,    0,    0,$FFE8; 0
+		dc.w $F409,   $F,    7,	   0; 4
+		dc.w  $408,  $15,   $A,$FFE8; 8
+		dc.w  $404,  $18,   $C,	   0; 12
+		dc.w $F108,  $1A,   $D,$FFEC; 16
+		dc.w $F104,  $1D,   $E,	   4; 20
+word_A6A8:	dc.w 6			; DATA XREF: ROM:0000A66Co
+		dc.w $F409,    0,    0,$FFE8; 0
+		dc.w $F409,   $F,    7,	   0; 4
+		dc.w  $408,  $15,   $A,$FFE8; 8
+		dc.w  $404,  $18,   $C,	   0; 12
+		dc.w $F408,  $1F,   $F,$FFEC; 16
+		dc.w $F404,  $22,  $11,	   4; 20
+word_A6DA:	dc.w 7			; DATA XREF: ROM:0000A66Eo
+		dc.w  $400,  $30,  $18,	  $C; 0
+		dc.w $F409,    0,    0,$FFE8; 4
+		dc.w $F409,   $F,    7,	   0; 8
+		dc.w  $408,  $15,   $A,$FFE8; 12
+		dc.w  $404,  $18,   $C,	   0; 16
+		dc.w $F108,  $1A,   $D,$FFEC; 20
+		dc.w $F104,  $1D,   $E,	   4; 24
+word_A714:	dc.w 7			; DATA XREF: ROM:0000A670o
+		dc.w  $404,  $31,  $18,	  $C; 0
+		dc.w $F409,    0,    0,$FFE8; 4
+		dc.w $F409,   $F,    7,	   0; 8
+		dc.w  $408,  $15,   $A,$FFE8; 12
+		dc.w  $404,  $18,   $C,	   0; 16
+		dc.w $F408,  $1F,   $F,$FFEC; 20
+		dc.w $F404,  $22,  $11,	   4; 24
+word_A74E:	dc.w 6			; DATA XREF: ROM:0000A672o
+		dc.w $F40D,    0,    0,$FFEC; 0
+		dc.w  $40C,    8,    4,$FFEC; 4
+		dc.w  $400,   $C,    6,	  $C; 8
+		dc.w  $C04,   $D,    6,$FFF4; 12
+		dc.w $F108,  $1A,   $D,$FFEC; 16
+		dc.w $F104,  $1D,   $E,	   4; 20
+word_A780:	dc.w 4			; DATA XREF: ROM:0000A674o
+		dc.w $F40D,    0,    0,$FFEC; 0
+		dc.w  $40C,    8,    4,$FFEC; 4
+		dc.w  $400,   $C,    6,	  $C; 8
+		dc.w  $C04,   $D,    6,$FFF4; 12
+		dc.w $F408,  $1F,   $F,$FFEC; 16
+		dc.w $F404,  $22,  $11,	   4; 20
+Map_Obj46:	dc.w word_A7BA-Map_Obj46 ; DATA	XREF: ROM:0000A580o
+					; ROM:Map_Obj46o ...
+		dc.w word_A7C4-Map_Obj46
+		dc.w word_A7CE-Map_Obj46
+		dc.w word_A7D8-Map_Obj46
+word_A7BA:	dc.w 1			; DATA XREF: ROM:Map_Obj46o
+		dc.w $F805,  $24,  $12,$FFF8; 0
+word_A7C4:	dc.w 1			; DATA XREF: ROM:0000A7B4o
+		dc.w $F805,  $28,  $14,$FFF8; 0
+word_A7CE:	dc.w 1			; DATA XREF: ROM:0000A7B6o
+		dc.w $F805,  $2C,  $16,$FFF8; 0
+word_A7D8:	dc.w 1			; DATA XREF: ROM:0000A7B8o
+		dc.w $F805,  $33,  $19,$FFF8; 0
+; ===========================================================================
+
 
 
 
@@ -60141,7 +60439,7 @@ loc2_1DF5C:
         neg.w   x_vel(a0)
 +       rts
 
-        bsr     J_SpeedToPos_0C         ; loc2_1E008
+        bsr     J_ObjectMove_0C         ; loc2_1E008
         jsr     ObjCheckFloorDist             ; loc2_13898
         cmpi.w  #$FFF8,d1
         blt.s   +
@@ -60192,7 +60490,7 @@ J_AnimateSprite_07: ; loc2_1DFFC:
         jmp     AnimateSprite           ; loc2_D412
 J_ObjectFall_02: ; loc2_1E002:
         jmp     ObjectMoveAndFall              ; loc2_D24E  
-J_SpeedToPos_0C: ; loc2_1E008:
+J_ObjectMove_0C: ; loc2_1E008:
         jmp     ObjectMove              ; loc2_D27A  
         dc.w    $0           ; Filler 
 
@@ -60554,7 +60852,7 @@ loc2_1F79A:
 
 Obj62_Main:
         bsr     loc2_1F7E8
-        bsr     J_SpeedToPos_12         ; loc2_1F996
+        bsr     J_ObjectMove_12         ; loc2_1F996
         jsr     ObjCheckFloorDist             ; loc2_13898
         cmpi.w  #$FFF8,d1
         blt.s   loc2_1F7CC
@@ -60698,7 +60996,7 @@ J_Adjust2PArtPointer_22: ; loc2_1F98A:
         jmp     Adjust2PArtPointer     ; loc2_DC30
 J_ObjectFall_06: ; loc2_1F990:
         jmp     ObjectMoveAndFall              ; loc2_D24E
-J_SpeedToPos_12: ; loc2_1F996:
+J_ObjectMove_12: ; loc2_1F996:
         jmp     ObjectMove              ; loc2_D27A   
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -61033,7 +61331,7 @@ Obj4C_Animate:
         bsr     loc2_1F026
         bsr     loc2_1EFC8
         bsr     loc2_1EF48
-        bsr     J_SpeedToPos_0F         ; loc_1F2E8
+        bsr     J_ObjectMove_0F         ; loc_1F2E8
         lea     (Animated_Batbot).l, a1
         bsr     J_AnimateSprite_0B      ; loc_1F2E2
         bra     J_MarkObjGone_17        ; loc_1F2DC
@@ -61264,7 +61562,7 @@ J_MarkObjGone_17: ; loc_1F2DC:
         jmp     MarkObjGone             ; loc_D2A0
 J_AnimateSprite_0B: ; loc_1F2E2:
         jmp     AnimateSprite           ; loc_D412
-J_SpeedToPos_0F: ; loc_1F2E8:
+J_ObjectMove_0F: ; loc_1F2E8:
         jmp     ObjectMove              ; loc_D27A
         even
 ;=============================================================================== 
@@ -61321,7 +61619,7 @@ Obj4E_Secondary_Routine_0:
 
 Obj4E_Secondary_Routine_1:
         bsr     loc2_1F3CE
-        bsr     J_SpeedToPos_10         ; loc2_1F5E2
+        bsr     J_ObjectMove_10         ; loc2_1F5E2
         jsr     ObjCheckFloorDist             ; (loc2_13898)
         cmpi.w  #$FFF8,d1
         blt.s   loc2_1F3B6
@@ -61442,7 +61740,7 @@ J_AnimateSprite_0C: ; loc2_1F5D6:
         jmp     AnimateSprite           ; (loc2_D412)
 J_ObjectFall_05: ; loc2_1F5DC:
         jmp     ObjectMoveAndFall       ; (loc2_D24E)
-J_SpeedToPos_10: ; loc2_1F5E2:
+J_ObjectMove_10: ; loc2_1F5E2:
         jmp     ObjectMove              ; (loc2_D27A)         
 
 ;===========================================================================

@@ -2459,13 +2459,13 @@ ArtTile_ArtNem_Unknown                = $03FA
 ArtTile_ArtNem_BigRing                = $0400
 ArtTile_ArtNem_Crabmeat               = $0400
 ArtTile_ArtNem_FloatPlatform          = $0418
-ArtTile_ArtNem_Buzz                   = $0444
 ArtTile_ArtNem_BigRing_Flash          = $0462
 ArtTile_ArtNem_Chopper                = $047B
 ArtTile_ArtNem_Newtron                = $049B
 ArtTile_ArtNem_EndPoints              = $04B6
 ArtTile_ArtNem_Motobug                = $04F0
 ArtTile_ArtNem_GhzWall1               = $050F
+ArtTile_ArtNem_Buzz                   = $051B
 ArtTile_ArtNem_BreakWall              = $0590
 
 Page1_RAM =			Chunk_Table
