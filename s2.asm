@@ -30478,7 +30478,7 @@ ObjPtr_Grabber:		dc.l ObjA7	; Grabber (spider badnik) from CPZ
 ObjPtr_GrabberLegs:	dc.l ObjA8	; Grabber's legs from CPZ
 ObjPtr_GrabberBox:	dc.l ObjA9	; The little hanger box thing a Grabber's string comes out of
 ObjPtr_GrabberString:	dc.l ObjAA	; The thin white string a Grabber hangs from
-			dc.l ObjNull	; Unknown
+			dc.l ObjAB	; waterfall sound
 ObjPtr_Balkiry:		dc.l ObjAC	; Balkiry (jet badnik) from SCZ
 ObjPtr_CluckerBase:	dc.l ObjAD	; Clucker's base from WFZ
 ObjPtr_Clucker:		dc.l ObjAE	; Clucker (chicken badnik) from WFZ
@@ -30574,6 +30574,37 @@ ObjPtr_RingPrize:	dc.l ObjDC	; Ring prize from Casino Night Zone
 
 ObjNull: ;;
 	bra.w	DeleteObject
+
+ObjAB:
+		moveq	#0,d0
+		move.b	routine(a0),d0
+		move.w	WSnd_Index(pc,d0.w),d1
+		jmp	WSnd_Index(pc,d1.w)
+; ===========================================================================
+WSnd_Index:	dc.w WSnd_Main-WSnd_Index
+		dc.w WSnd_PlaySnd-WSnd_Index
+; ===========================================================================
+
+WSnd_Main:	; Routine 0
+		addq.b	#2,routine(a0)
+		move.b	#4,render_flags(a0)
+
+WSnd_PlaySnd:	; Routine 2
+		move.b	(Vint_runcount+3).w,d0 ; get low byte of VBlank counter
+		andi.b	#$3F,d0
+		bne.s	WSnd_ChkDel
+		move.w	#$D0,d0 ; waterfall sound
+		jsr	(PlaySound).l
+
+WSnd_ChkDel:
+		andi.w	#$FF80,d0	; round down to nearest $80
+		move.w	(Camera_X_pos).w,d1 ; get screen position
+		subi.w	#128,d1
+		andi.w	#$FF80,d1
+		sub.w	d1,d0		; approx distance between object and screen
+		cmpi.w	#128+320+192,d0
+		bhi.w	DeleteObject
+		rts	
 
 ;----------------------------------------------------
 ; Object 44 - GHZ wall
